@@ -7,6 +7,7 @@
 <body>
     <div class="container">
         <h2>Edit Appointment</h2>
+
         <form method="post">
             <label for="service">Service:</label>
             <select name="service">
@@ -19,10 +20,33 @@
             <input type="date" name="date" value="{{ appointment[2] }}" required>
 
             <label for="time">Time:</label>
-            <input type="time" name="time" value="{{ appointment[3] }}" required>
+            <select name="time" required>
+                <option value="09:00" {% if appointment[3] == '09:00' %} selected {% endif %}>09:00</option>
+                <option value="09:30" {% if appointment[3] == '09:30' %} selected {% endif %}>09:30</option>
+                <option value="10:00" {% if appointment[3] == '10:00' %} selected {% endif %}>10:00</option>
+                <option value="10:30" {% if appointment[3] == '10:30' %} selected {% endif %}>10:30</option>
+                <option value="11:00" {% if appointment[3] == '11:00' %} selected {% endif %}>11:00</option>
+                <option value="11:30" {% if appointment[3] == '11:30' %} selected {% endif %}>11:30</option>
+                <option value="12:00" {% if appointment[3] == '12:00' %} selected {% endif %}>12:00</option>
+                <option value="12:30" {% if appointment[3] == '12:30' %} selected {% endif %}>12:30</option>
+                <option value="13:00" {% if appointment[3] == '13:00' %} selected {% endif %}>13:00</option>
+                <option value="13:30" {% if appointment[3] == '13:30' %} selected {% endif %}>13:30</option>
+                <option value="14:00" {% if appointment[3] == '14:00' %} selected {% endif %}>14:00</option>
+                <option value="14:30" {% if appointment[3] == '14:30' %} selected {% endif %}>14:30</option>
+                <option value="15:00" {% if appointment[3] == '15:00' %} selected {% endif %}>15:00</option>
+                <option value="15:30" {% if appointment[3] == '15:30' %} selected {% endif %}>15:30</option>
+                <option value="16:00" {% if appointment[3] == '16:00' %} selected {% endif %}>16:00</option>
+                <option value="16:30" {% if appointment[3] == '16:30' %} selected {% endif %}>16:30</option>
+                <option value="17:00" {% if appointment[3] == '17:00' %} selected {% endif %}>17:00</option>
+                <option value="17:30" {% if appointment[3] == '17:30' %} selected {% endif %}>17:30</option>
+                <option value="18:00" {% if appointment[3] == '18:00' %} selected {% endif %}>18:00</option>
+                <option value="18:30" {% if appointment[3] == '18:30' %} selected {% endif %}>18:30</option>
+                <option value="19:00" {% if appointment[3] == '19:00' %} selected {% endif %}>19:00</option>
+            </select>
 
             <button type="submit">Update Appointment</button>
         </form>
+
         <a href="{{ url_for('user_dashboard') }}">Cancel</a>
     </div>
 </body>
