@@ -16,9 +16,9 @@
         <form method="post">
             <label for="service">Select Service:</label>
             <select id="service" name="service" required>
-                <option value="haircut">Haircut</option>
-                <option value="shave">Shave</option>
-                <option value="beardTrim">Beard Trim</option>
+                <option value="Taglio di capelli">Taglio di capelli</option>
+                <option value="Taglio di capelli + Barba">Taglio di capelli + Barba</option>
+                <option value="Solo Barba">Solo Barba</option>
             </select>
 
             <label for="date">Select Date:</label>
@@ -55,7 +55,7 @@
         <a href="{{ url_for('index') }}">Back to Home</a>
     </div>
 
-    <!-- ✅ SCRIPT per disabilitare gli orari già prenotati -->
+    <!-- Script per disabilitare gli orari prenotati -->
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const dateInput = document.getElementById('date');

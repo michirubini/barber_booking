@@ -11,10 +11,10 @@
 
         <form method="post">
             <label for="service">Service:</label>
-            <select name="service">
-                <option value="haircut" {% if appointment[1] == 'haircut' %} selected {% endif %}>Haircut</option>
-                <option value="shave" {% if appointment[1] == 'shave' %} selected {% endif %}>Shave</option>
-                <option value="beardTrim" {% if appointment[1] == 'beardTrim' %} selected {% endif %}>Beard Trim</option>
+            <select name="service" required>
+                <option value="Taglio di capelli" {% if appointment[1] == 'Taglio di capelli' %} selected {% endif %}>Taglio di capelli</option>
+                <option value="Taglio di capelli + Barba" {% if appointment[1] == 'Taglio di capelli + Barba' %} selected {% endif %}>Taglio di capelli + Barba</option>
+                <option value="Solo Barba" {% if appointment[1] == 'Solo Barba' %} selected {% endif %}>Solo Barba</option>
             </select>
 
             <label for="date">Date:</label>
