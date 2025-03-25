@@ -31,3 +31,35 @@ Le credenziali di accesso per l'Admin sono nome utente "admin" password: "admin"
    git clone https://github.com/michelerubinic/barber_booking.git
    cd barber_booking
 
+---------------------------------
+
+# Barbershop Booking - Sistema di Prenotazione
+
+## 📌 Introduzione
+Sistema di prenotazione per un barbiere, sviluppato con Flask e SQLite, che consente agli utenti di prenotare appuntamenti scegliendo solo tra i servizi disponibili.
+
+## ✅ Funzionalità principali
+- **Login/Logout** per utenti e amministratori nome utente: ADMIN passw: ADMIN
+- **Registrazione utenti**
+- **Prenotazione Appuntamenti** con scelta del servizio, giorno e fascia oraria
+- **Gestione Appuntamenti Utente**: modifica o cancellazione
+- **Dashboard Admin**: visualizza e gestisce tutti gli appuntamenti
+- **Verifica automatica disponibilità** con blocco delle fasce orarie occupate
+- **Completamente responsive** su desktop e mobile
+
+## 💈 Servizi disponibili (selezionabili dall'utente):
+- Taglio di capelli
+- Taglio di capelli + Barba
+- Solo Barba
+
+✅ **Solo questi servizi possono essere prenotati**  
+✅ **Scelta dell'orario tra le 09:00 e le 19:00 in slot di 30 minuti**
+
+## 🛠 Requisiti
+- Python 3.x
+- Flask
+- SQLite
+
+Installa le dipendenze con:
+```bash
+pip install -r requirements.txt

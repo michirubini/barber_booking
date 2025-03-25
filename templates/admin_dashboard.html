@@ -17,6 +17,9 @@
                     <tr>
                         <th>ID</th>
                         <th>Username</th>
+                        <th>Nome</th>
+                        <th>Cognome</th>
+                        <th>Telefono</th>
                         <th>Service</th>
                         <th>Date</th>
                         <th>Time</th>
@@ -28,9 +31,12 @@
                     <tr>
                         <td data-label="ID">{{ appointment[0] }}</td>
                         <td data-label="Username">{{ appointment[1] }}</td>
-                        <td data-label="Service">{{ appointment[2] }}</td>
-                        <td data-label="Date">{{ appointment[3] }}</td>
-                        <td data-label="Time">{{ appointment[4] }}</td>
+                        <td data-label="Nome">{{ appointment[2] }}</td>
+                        <td data-label="Cognome">{{ appointment[3] }}</td>
+                        <td data-label="Telefono">{{ appointment[4] }}</td>
+                        <td data-label="Service">{{ appointment[5] }}</td>
+                        <td data-label="Date">{{ appointment[6] }}</td>
+                        <td data-label="Time">{{ appointment[7] }}</td>
                         <td data-label="Actions">
                             <button class="delete-appointment" data-id="{{ appointment[0] }}">Delete</button>
                         </td>
