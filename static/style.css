@@ -67,7 +67,6 @@ button:hover {
   background-color: #0056b3;
 }
 
-
 .big-btn {
   width: 100%;
   padding: 15px;
@@ -133,19 +132,58 @@ th {
   body {
     padding: 10px;
   }
-  
+
   .container {
     width: 95%;
     padding: 15px;
   }
-  
+
   input, select, button {
     font-size: 14px;
     padding: 8px;
+    width: 100%;
   }
-  
-  th, td {
-    padding: 8px;
-    font-size: 14px;
+
+  h1, h2, h3 {
+    font-size: 20px;
+  }
+
+  .big-btn {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  /* Make the table responsive */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  table thead {
+    display: none;
+  }
+
+  table tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #fff;
+  }
+
+  table td {
+    display: block;
+    text-align: left;
+    padding: 8px 0;
+    border: none;
+  }
+
+  table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
   }
 }

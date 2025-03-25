@@ -151,6 +151,20 @@ def book():
 
     return render_template('book.html')
 
+@app.route('/get_booked_times', methods=['POST'])
+def get_booked_times():
+    data = request.get_json()
+    date = data.get('date')
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT time FROM appointments WHERE date = ?", (date,))
+    booked_times = [row[0] for row in cursor.fetchall()]
+    conn.close()
+
+    return jsonify({'booked_times': booked_times})
+
+
 # Modifica prenotazione
 @app.route('/edit_appointment/<int:appointment_id>', methods=['GET', 'POST'])
 def edit_appointment(appointment_id):

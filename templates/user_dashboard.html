@@ -2,16 +2,8 @@
 <html lang="en">
 <head>
     <title>User Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        /* Stile per pulsanti grandi e uniformi */
-        .big-btn {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            margin: 10px 0;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -20,25 +12,29 @@
 
         {% if appointments %}
             <table>
-                <tr>
-                    <th>Service</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Actions</th>
-                </tr>
-                {% for appointment in appointments %}
-                <tr>
-                    <td>{{ appointment[1] }}</td>
-                    <td>{{ appointment[2] }}</td>
-                    <td>{{ appointment[3] }}</td>
-                    <td>
-                        <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
-                            <button class="big-btn">Edit</button>
-                        </a>
-                        <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}">Delete</button>
-                    </td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td data-label="Service">{{ appointment[1] }}</td>
+                        <td data-label="Date">{{ appointment[2] }}</td>
+                        <td data-label="Time">{{ appointment[3] }}</td>
+                        <td data-label="Actions">
+                            <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
+                                <button class="big-btn">Edit</button>
+                            </a>
+                            <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         {% else %}
             <p>No appointments booked.</p>

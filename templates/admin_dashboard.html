@@ -12,27 +12,31 @@
         <h3>All Appointments</h3>
 
         {% if appointments %}
-            <table border="1">
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Service</th>
-                    <th>Date</th>
-                    <th>Time</th> <!-- ✅ Corretto per mostrare l'ora -->
-                    <th>Actions</th>
-                </tr>
-                {% for appointment in appointments %}
-                <tr>
-                    <td>{{ appointment[0] }}</td> <!-- ID -->
-                    <td>{{ appointment[1] }}</td> <!-- Username -->
-                    <td>{{ appointment[2] }}</td> <!-- Service -->
-                    <td>{{ appointment[3] }}</td> <!-- Date -->
-                    <td>{{ appointment[4] }}</td> <!-- Time -->
-                    <td>
-                        <button class="delete-appointment" data-id="{{ appointment[0] }}">Delete</button>
-                    </td>
-                </tr>
-                {% endfor %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Service</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td data-label="ID">{{ appointment[0] }}</td>
+                        <td data-label="Username">{{ appointment[1] }}</td>
+                        <td data-label="Service">{{ appointment[2] }}</td>
+                        <td data-label="Date">{{ appointment[3] }}</td>
+                        <td data-label="Time">{{ appointment[4] }}</td>
+                        <td data-label="Actions">
+                            <button class="delete-appointment" data-id="{{ appointment[0] }}">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         {% else %}
             <p>No appointments available.</p>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <title>User Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -12,12 +13,12 @@
         {% endif %}
         <form method="post">
             <label for="username">Username:</label>
-            <input type="text" name="username" required>
+            <input type="text" name="username" placeholder="Enter your username" required>
 
             <label for="password">Password:</label>
-            <input type="password" name="password" required>
+            <input type="password" name="password" placeholder="Enter your password" required>
 
-            <button type="submit">Login</button>
+            <button type="submit" class="big-btn">Login</button>
         </form>
         <a href="{{ url_for('index') }}">Back to Home</a>
     </div>

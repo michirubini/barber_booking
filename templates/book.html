@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <title>Book an Appointment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -21,10 +22,10 @@
             </select>
 
             <label for="date">Select Date:</label>
-            <input type="date" name="date" required>
+            <input type="date" name="date" id="date" required>
 
             <label for="time">Select Time:</label>
-            <select name="time" required>
+            <select name="time" id="time" required>
                 <option value="09:00">09:00</option>
                 <option value="09:30">09:30</option>
                 <option value="10:00">10:00</option>
@@ -53,5 +54,37 @@
 
         <a href="{{ url_for('index') }}">Back to Home</a>
     </div>
+
+    <!-- ✅ SCRIPT per disabilitare gli orari già prenotati -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateInput = document.getElementById('date');
+        const timeSelect = document.getElementById('time');
+
+        dateInput.addEventListener('change', function () {
+            const selectedDate = this.value;
+            if (!selectedDate) return;
+
+            fetch('{{ url_for("get_booked_times") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: selectedDate })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const booked = data.booked_times;
+                Array.from(timeSelect.options).forEach(option => {
+                    if (booked.includes(option.value)) {
+                        option.disabled = true;
+                        option.style.backgroundColor = '#ccc';
+                    } else {
+                        option.disabled = false;
+                        option.style.backgroundColor = '';
+                    }
+                });
+            });
+        });
+    });
+    </script>
 </body>
 </html>
