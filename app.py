@@ -103,18 +103,30 @@ def user_dashboard():
     conn.close()
     return render_template('user_dashboard.html', appointments=appointments)
 
+# ✅ Auto-elimina gli appuntamenti passati ogni volta che l'admin apre la dashboard
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if 'admin' not in session:
         return redirect(url_for('login_admin'))
+
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
+
+    # Elimina automaticamente gli appuntamenti più vecchi di oggi
+    today = datetime.now().strftime("%Y-%m-%d")
+    cursor.execute("DELETE FROM appointments WHERE date < ?", (today,))
+    conn.commit()
+
+    # Mostra solo gli appuntamenti futuri o di oggi
     cursor.execute("""
         SELECT appointments.id, users.username, users.name, users.surname, users.phone,
                appointments.service, appointments.date, appointments.time 
         FROM appointments 
         JOIN users ON appointments.user_id = users.id
-    """)
+        WHERE appointments.date >= ?
+        ORDER BY appointments.date, appointments.time
+    """, (today,))
+    
     appointments = cursor.fetchall()
     conn.close()
     return render_template('admin_dashboard.html', appointments=appointments)
@@ -129,7 +141,7 @@ def book():
         time = request.form['time']
         user_id = session['user_id']
 
-        # Controllo giorno della settimana
+        # Controllo giorno della settimana (solo dal martedì al sabato)
         day_of_week = datetime.strptime(date, "%Y-%m-%d").weekday()
         if day_of_week < 1 or day_of_week > 5:
             return render_template('book.html', error="È possibile prenotare solo dal martedì al sabato.")
@@ -204,3 +216,4 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
