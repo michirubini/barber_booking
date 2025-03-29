@@ -5,7 +5,6 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
 
-# Inizializza il database
 def init_db():
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
@@ -47,7 +46,7 @@ def login_admin():
             session['admin'] = True
             return redirect(url_for('admin_dashboard'))
         else:
-            return render_template('login_admin.html', error="Invalid admin credentials")
+            return render_template('login_admin.html', error="Credenziali admin non valide")
     return render_template('login_admin.html')
 
 @app.route('/login_user', methods=['GET', 'POST'])
@@ -65,7 +64,7 @@ def login_user():
             session['username'] = username
             return redirect(url_for('user_dashboard'))
         else:
-            return render_template('login_user.html', error="Invalid credentials")
+            return render_template('login_user.html', error="Credenziali non valide")
     return render_template('login_user.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -81,7 +80,7 @@ def register():
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         if cursor.fetchone():
             conn.close()
-            return render_template('register.html', error="Username already exists")
+            return render_template('register.html', error="Username già esistente")
         cursor.execute("""
             INSERT INTO users (username, password, name, surname, phone)
             VALUES (?, ?, ?, ?, ?)
@@ -103,7 +102,6 @@ def user_dashboard():
     conn.close()
     return render_template('user_dashboard.html', appointments=appointments)
 
-# ✅ Auto-elimina gli appuntamenti passati ogni volta che l'admin apre la dashboard
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if 'admin' not in session:
@@ -112,12 +110,10 @@ def admin_dashboard():
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
-    # Elimina automaticamente gli appuntamenti più vecchi di oggi
     today = datetime.now().strftime("%Y-%m-%d")
     cursor.execute("DELETE FROM appointments WHERE date < ?", (today,))
     conn.commit()
 
-    # Mostra solo gli appuntamenti futuri o di oggi
     cursor.execute("""
         SELECT appointments.id, users.username, users.name, users.surname, users.phone,
                appointments.service, appointments.date, appointments.time 
@@ -142,23 +138,22 @@ def book():
         time = request.form['time']
         user_id = session['user_id']
 
-        # Controllo giorno della settimana
         day = datetime.strptime(date, "%Y-%m-%d")
-        day_of_week = day.weekday()  # 0 = lunedì, 6 = domenica
+        day_of_week = day.weekday()
 
         if day_of_week < 1 or day_of_week > 5:
             return render_template('book.html', error="È possibile prenotare solo dal martedì al sabato.")
-
+        
         if day_of_week == 5 and time > '15:00':
             return render_template('book.html', error="Il sabato è possibile prenotare solo fino alle 15:00.")
 
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM appointments WHERE date = ? AND time = ?", (date, time))
-        existing_appointment = cursor.fetchone()
-        if existing_appointment:
+        cursor.execute("SELECT COUNT(*) FROM appointments WHERE date = ? AND time = ?", (date, time))
+        count = cursor.fetchone()[0]
+        if count >= 2:
             conn.close()
-            return render_template('book.html', error="Fascia oraria già prenotata. Scegli un altro orario.")
+            return render_template('book.html', error="Fascia oraria già piena. Scegli un altro orario.")
 
         cursor.execute("INSERT INTO appointments (user_id, service, date, time) VALUES (?, ?, ?, ?)",
                        (user_id, service, date, time))
@@ -167,7 +162,6 @@ def book():
         return redirect(url_for('user_dashboard'))
 
     return render_template('book.html')
-
 
 @app.route('/edit_appointment/<int:appointment_id>', methods=['GET', 'POST'])
 def edit_appointment(appointment_id):
@@ -205,7 +199,7 @@ def delete_appointment(appointment_id):
         cursor.execute("DELETE FROM appointments WHERE id = ? AND user_id = ?", (appointment_id, session['user_id']))
     conn.commit()
     conn.close()
-    return jsonify({'success': True, 'message': 'Appointment deleted successfully'})
+    return jsonify({'success': True, 'message': 'Appuntamento eliminato'})
 
 @app.route('/get_booked_times', methods=['POST'])
 def get_booked_times():
@@ -213,10 +207,12 @@ def get_booked_times():
     date = data.get('date')
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT time FROM appointments WHERE date = ?", (date,))
-    booked_times = [row[0] for row in cursor.fetchall()]
+    cursor.execute("SELECT time, COUNT(*) FROM appointments WHERE date = ? GROUP BY time", (date,))
+    time_counts = cursor.fetchall()
     conn.close()
-    return jsonify({'booked_times': booked_times})
+
+    fully_booked = [row[0] for row in time_counts if row[1] >= 2]
+    return jsonify({'booked_times': fully_booked})
 
 @app.route('/logout')
 def logout():

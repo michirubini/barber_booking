@@ -34,7 +34,6 @@
         <a href="{{ url_for('user_dashboard') }}">Annulla</a>
     </div>
 
-    <!-- Stessa logica JS per disattivare orari sabato oltre le 15:00 -->
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const dateInput = document.getElementById('date');
@@ -74,7 +73,7 @@
             updateTimes(this.value);
         });
 
-        updateTimes(dateInput.value); // Inizializza anche se già compilato
+        updateTimes(dateInput.value); // inizializza
     });
     </script>
 </body>
