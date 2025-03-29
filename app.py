@@ -135,16 +135,22 @@ def admin_dashboard():
 def book():
     if 'user_id' not in session:
         return redirect(url_for('login_user'))
+
     if request.method == 'POST':
         service = request.form['service']
         date = request.form['date']
         time = request.form['time']
         user_id = session['user_id']
 
-        # Controllo giorno della settimana (solo dal martedì al sabato)
-        day_of_week = datetime.strptime(date, "%Y-%m-%d").weekday()
+        # Controllo giorno della settimana
+        day = datetime.strptime(date, "%Y-%m-%d")
+        day_of_week = day.weekday()  # 0 = lunedì, 6 = domenica
+
         if day_of_week < 1 or day_of_week > 5:
             return render_template('book.html', error="È possibile prenotare solo dal martedì al sabato.")
+
+        if day_of_week == 5 and time > '15:00':
+            return render_template('book.html', error="Il sabato è possibile prenotare solo fino alle 15:00.")
 
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
@@ -153,12 +159,15 @@ def book():
         if existing_appointment:
             conn.close()
             return render_template('book.html', error="Fascia oraria già prenotata. Scegli un altro orario.")
+
         cursor.execute("INSERT INTO appointments (user_id, service, date, time) VALUES (?, ?, ?, ?)",
                        (user_id, service, date, time))
         conn.commit()
         conn.close()
         return redirect(url_for('user_dashboard'))
+
     return render_template('book.html')
+
 
 @app.route('/edit_appointment/<int:appointment_id>', methods=['GET', 'POST'])
 def edit_appointment(appointment_id):

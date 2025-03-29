@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <title>Book an Appointment</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,24 +7,24 @@
 </head>
 <body>
     <div class="container">
-        <h2>Book an Appointment</h2>
+        <h2>Prenota un Appuntamento</h2>
 
         {% if error %}
             <p style="color: red;">{{ error }}</p>
         {% endif %}
 
         <form method="post">
-            <label for="service">Select Service:</label>
-            <select id="service" name="service" required>
+            <label for="service">Seleziona Servizio:</label>
+            <select name="service" required>
                 <option value="Taglio di capelli">Taglio di capelli</option>
                 <option value="Taglio di capelli + Barba">Taglio di capelli + Barba</option>
                 <option value="Solo Barba">Solo Barba</option>
             </select>
 
-            <label for="date">Select Date:</label>
+            <label for="date">Seleziona Data:</label>
             <input type="date" name="date" id="date" required>
 
-            <label for="time">Select Time:</label>
+            <label for="time">Seleziona Orario:</label>
             <select name="time" id="time" required>
                 <option value="09:00">09:00</option>
                 <option value="09:30">09:30</option>
@@ -49,32 +49,38 @@
                 <option value="19:00">19:00</option>
             </select>
 
-            <button type="submit">Book</button>
+            <button type="submit">Prenota</button>
         </form>
 
-        <a href="{{ url_for('index') }}">Back to Home</a>
+        <a href="{{ url_for('index') }}">Torna alla Home</a>
     </div>
 
-    <!-- Script per disabilitare gli orari prenotati -->
+    <!-- JS per disabilitare orari già occupati e quelli oltre le 15:00 il sabato -->
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const dateInput = document.getElementById('date');
         const timeSelect = document.getElementById('time');
 
-        dateInput.addEventListener('change', function () {
-            const selectedDate = this.value;
-            if (!selectedDate) return;
+        function updateTimes(date) {
+            if (!date) return;
+
+            const selectedDay = new Date(date).getDay(); // 6 = sabato
+            const isSaturday = selectedDay === 6;
 
             fetch('{{ url_for("get_booked_times") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date: selectedDate })
+                body: JSON.stringify({ date: date })
             })
             .then(response => response.json())
             .then(data => {
                 const booked = data.booked_times;
+
                 Array.from(timeSelect.options).forEach(option => {
-                    if (booked.includes(option.value)) {
+                    const time = option.value;
+                    const isAfter15 = time > '15:00';
+
+                    if (booked.includes(time) || (isSaturday && isAfter15)) {
                         option.disabled = true;
                         option.style.backgroundColor = '#ccc';
                     } else {
@@ -83,6 +89,10 @@
                     }
                 });
             });
+        }
+
+        dateInput.addEventListener('change', function () {
+            updateTimes(this.value);
         });
     });
     </script>
