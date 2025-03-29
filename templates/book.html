@@ -1,82 +1,203 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <title>Prenota un Appuntamento</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prenota un Appuntamento</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .calendar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 20px;
+    }
+    .calendar-day {
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .calendar-day.disabled {
+      background-color: #ddd;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .calendar-day.selected {
+      background-color: #007bff;
+      color: white;
+    }
+    .time-slot {
+      padding: 10px;
+      margin: 5px;
+      background-color: #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .time-slot.disabled {
+      background-color: #ccc;
+      color: #999;
+      cursor: not-allowed;
+    }
+    .time-slot.selected {
+      background-color: #28a745;
+      color: white;
+    }
+    .times-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Prenota un Appuntamento</h2>
+  <div class="container">
+    <h2>Prenota un Appuntamento</h2>
 
-        {% if error %}
-            <p style="color: red;">{{ error }}</p>
-        {% endif %}
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
 
-        <form method="post">
-            <label for="service">Servizio:</label>
-            <select name="service" required>
-                <option value="Taglio di capelli">Taglio di capelli</option>
-                <option value="Taglio di capelli + Barba">Taglio di capelli + Barba</option>
-                <option value="Solo Barba">Solo Barba</option>
-            </select>
+    <form method="post">
+      <input type="hidden" name="date" id="selected-date" required>
+      <input type="hidden" name="time" id="selected-time" required>
 
-            <label for="date">Data:</label>
-            <input type="date" name="date" id="date" required>
+      <label for="service">Servizio:</label>
+      <select name="service" required>
+        <option value="Taglio di capelli">Taglio di capelli</option>
+        <option value="Taglio di capelli + Barba">Taglio di capelli + Barba</option>
+        <option value="Solo Barba">Solo Barba</option>
+      </select>
 
-            <label for="time">Orario:</label>
-            <select name="time" id="time" required>
-                {% set times = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00'] %}
-                {% for t in times %}
-                    <option value="{{ t }}">{{ t }}</option>
-                {% endfor %}
-            </select>
+      <h3>Seleziona una Data</h3>
+      <div class="calendar-controls">
+        <button type="button" id="prev-month">◀</button>
+        <span id="month-year"></span>
+        <button type="button" id="next-month">▶</button>
+      </div>
+      <div id="calendar" class="calendar"></div>
 
-            <button type="submit">Prenota</button>
-        </form>
+      <h3>Orari Disponibili</h3>
+      <div id="times" class="times-container"></div>
 
-        <a href="{{ url_for('index') }}">Torna alla Home</a>
-    </div>
+      <button type="submit">Prenota</button>
+    </form>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const dateInput = document.getElementById('date');
-        const timeSelect = document.getElementById('time');
+    <a href="{{ url_for('index') }}">Torna alla Home</a>
+  </div>
 
-        function updateTimes(date) {
-            if (!date) return;
+  <script>
+    const calendar = document.getElementById('calendar');
+    const timesContainer = document.getElementById('times');
+    const dateInput = document.getElementById('selected-date');
+    const timeInput = document.getElementById('selected-time');
+    const monthYearLabel = document.getElementById('month-year');
+    const prevBtn = document.getElementById('prev-month');
+    const nextBtn = document.getElementById('next-month');
 
-            const selectedDay = new Date(date).getDay();
-            const isSaturday = selectedDay === 6;
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+    const times = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00'];
 
-            fetch('{{ url_for("get_booked_times") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date: date })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const booked = data.booked_times;
+    let currentDate = new Date();
 
-                Array.from(timeSelect.options).forEach(option => {
-                    const time = option.value;
-                    const isAfter15 = time > '15:00';
+    function renderCalendar(year, month) {
+      calendar.innerHTML = '';
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-                    if (booked.includes(time) || (isSaturday && isAfter15)) {
-                        option.disabled = true;
-                        option.style.backgroundColor = '#ccc';
-                    } else {
-                        option.disabled = false;
-                        option.style.backgroundColor = '';
-                    }
-                });
-            });
+      const currentMonth = new Date(year, month);
+      monthYearLabel.textContent = currentMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        calendar.appendChild(empty);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d);
+        date.setHours(0, 0, 0, 0);
+        const weekday = date.getDay();
+        const dateStr = date.toISOString().split('T')[0];
+
+        const div = document.createElement('div');
+        div.classList.add('calendar-day');
+        div.innerText = `${d}\n${dayNames[weekday]}`;
+
+        if (date < today || weekday === 0 || weekday === 1) {
+          div.classList.add('disabled');
+          div.dataset.disabled = "true";
+        } else {
+          div.dataset.disabled = "false";
         }
 
-        dateInput.addEventListener('change', function () {
-            updateTimes(this.value);
+        div.addEventListener('click', () => {
+          if (div.dataset.disabled === "true") return;
+          document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
+          div.classList.add('selected');
+          dateInput.value = dateStr;
+          loadTimes(date);
         });
+
+        calendar.appendChild(div);
+      }
+    }
+
+    prevBtn.addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
     });
-    </script>
+
+    nextBtn.addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+    });
+
+    function loadTimes(date) {
+      timesContainer.innerHTML = '';
+      const isSaturday = date.getDay() === 6;
+      const dateStr = date.toISOString().split('T')[0];
+
+      fetch('{{ url_for("get_booked_times") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: dateStr })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const booked = data.booked_times;
+
+        times.forEach(t => {
+          const isAfter15 = isSaturday && t > '15:00';
+          const isDisabled = booked.includes(t) || isAfter15;
+
+          const div = document.createElement('div');
+          div.classList.add('time-slot');
+          if (isDisabled) div.classList.add('disabled');
+          div.innerText = t;
+
+          if (!isDisabled) {
+            div.addEventListener('click', () => {
+              document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+              div.classList.add('selected');
+              timeInput.value = t;
+            });
+          }
+
+          timesContainer.appendChild(div);
+        });
+      });
+    }
+
+    renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+  </script>
 </body>
 </html>
