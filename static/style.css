@@ -20,7 +20,7 @@ body {
 .container {
   width: 100%;
   max-width: 600px;
-  background: #fffaf2; /* avorio chiaro */
+  background: #fffaf2;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -30,8 +30,19 @@ body {
 /* Header */
 h1, h2, h3 {
   text-align: center;
-  color: #4e3f2f; /* marrone scuro elegante */
+  color: #4e3f2f;
   margin-bottom: 15px;
+}
+
+/* Logo */
+.logo-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  max-width: 180px;
+  height: auto;
 }
 
 /* Form */
@@ -58,7 +69,7 @@ input, select, button {
 
 /* Button */
 button {
-  background-color: #a67c52; /* marrone chiaro */
+  background-color: #a67c52;
   color: #fff;
   cursor: pointer;
   font-weight: bold;
@@ -67,7 +78,7 @@ button {
 }
 
 button:hover {
-  background-color: #8c6239; /* marrone scuro */
+  background-color: #8c6239;
 }
 
 .big-btn {

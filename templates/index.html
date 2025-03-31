@@ -1,34 +1,27 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbershop Booking</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        .center-text {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .emoji {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barbershop Booking</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <div class="center-text">
-            <div class="emoji">💈</div>
-            <h1>Benvenuto nel sistema di prenotazione di Les Klips Hair & Barber </h1>
-            <p>Accedi o registrati per prenotare il tuo appuntamento.<br><strong>Prenotazioni dal martedì al venerdi – dalle 9:00 alle 19:00</strong></p>
-            <p><strong>Il sabato - dalle 9:00 alle 15:00</strong></p>
-        </div>
+  <div class="container">
 
-        <a href="{{ url_for('login_user') }}"><button class="big-btn">Accedi come Cliente</button></a>
-        <a href="{{ url_for('register') }}"><button class="big-btn">Registrati</button></a>
-        <a href="{{ url_for('login_admin') }}"><button class="big-btn">Accedi come Admin</button></a>
+    <!-- LOGO -->
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Les Klips" class="logo">
     </div>
+
+    <div class="center-text">
+      <div class="emoji"></div>
+      <h1>Benvenuto nel sistema di prenotazione di Les Klips Hair & Barber</h1>
+    </div>
+
+    <a href="{{ url_for('login_user') }}"><button class="big-btn">Accedi come Cliente</button></a>
+    <a href="{{ url_for('register') }}"><button class="big-btn">Registrati</button></a>
+    <a href="{{ url_for('login_admin') }}"><button class="big-btn">Accedi come Admin</button></a>
+  </div>
 </body>
 </html>
-
