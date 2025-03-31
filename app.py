@@ -291,9 +291,9 @@ def admin_get_day_slots():
 
     slots = {t: [] for t in times}
 
-    for username, servizio, time in records:
-        if time in slots:
-            slots[time].append({'username': username, 'servizio': servizio})
+    for username, service, time in records:
+        if time in slots and len(slots[time]) < 2:
+            slots[time].append({'username': username, 'servizio': service})
 
     return jsonify({'slots': slots})
 
