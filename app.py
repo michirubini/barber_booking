@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -138,14 +138,18 @@ def book():
         time = request.form['time']
         user_id = session['user_id']
 
-        day = datetime.strptime(date, "%Y-%m-%d")
-        day_of_week = day.weekday()
+        try:
+            # Fix timezone offset (+1 hour for Italy CET/CEST)
+            tz_offset = timedelta(hours=1)
+            date_obj = datetime.strptime(date, "%Y-%m-%d") + tz_offset
+            weekday = date_obj.weekday()
 
-        if day_of_week < 1 or day_of_week > 5:
-            return render_template('book.html', error="È possibile prenotare solo dal martedì al sabato.")
-        
-        if day_of_week == 5 and time > '15:00':
-            return render_template('book.html', error="Il sabato è possibile prenotare solo fino alle 15:00.")
+            if weekday < 1 or weekday > 5:
+                return render_template('book.html', error="È possibile prenotare solo dal martedì al sabato.")
+            if weekday == 5 and time > '15:00':
+                return render_template('book.html', error="Il sabato è possibile prenotare solo fino alle 15:00.")
+        except Exception:
+            return render_template('book.html', error="Data non valida.")
 
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
@@ -210,7 +214,6 @@ def get_booked_times():
     cursor.execute("SELECT time, COUNT(*) FROM appointments WHERE date = ? GROUP BY time", (date,))
     time_counts = cursor.fetchall()
     conn.close()
-
     fully_booked = [row[0] for row in time_counts if row[1] >= 2]
     return jsonify({'booked_times': fully_booked})
 

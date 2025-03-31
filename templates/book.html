@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Prenota un Appuntamento</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
@@ -103,9 +103,20 @@
     const nextBtn = document.getElementById('next-month');
 
     const dayNames = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-    const times = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00'];
+    const times = [
+      '09:00','09:30','10:00','10:30','11:00','11:30',
+      '12:00','12:30','13:00','13:30','14:00','14:30',
+      '15:00','15:30','16:00','16:30','17:00','17:30',
+      '18:00','18:30','19:00'
+    ];
 
     let currentDate = new Date();
+
+    function formatDate(date) {
+      return date.getFullYear() + '-' +
+        String(date.getMonth() + 1).padStart(2, '0') + '-' +
+        String(date.getDate()).padStart(2, '0');
+    }
 
     function renderCalendar(year, month) {
       calendar.innerHTML = '';
@@ -126,7 +137,7 @@
         const date = new Date(year, month, d);
         date.setHours(0, 0, 0, 0);
         const weekday = date.getDay();
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = formatDate(date);
 
         const div = document.createElement('div');
         div.classList.add('calendar-day');
@@ -164,7 +175,7 @@
     function loadTimes(date) {
       timesContainer.innerHTML = '';
       const isSaturday = date.getDay() === 6;
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = formatDate(date);
 
       fetch('{{ url_for("get_booked_times") }}', {
         method: 'POST',

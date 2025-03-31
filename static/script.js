@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     function deleteAppointment(appointmentId) {
-        if (!confirm("Are you sure you want to delete this appointment?")) {
+        if (!confirm("Sei sicuro di voler eliminare questo appuntamento?")) {
             return;
         }
 
@@ -11,15 +11,15 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert("Appointment deleted successfully.");
+                alert("Appuntamento eliminato con successo.");
                 location.reload();
             } else {
-                alert("Error: " + data.message);
+                alert("Errore: " + data.message);
             }
         })
         .catch(error => {
-            console.error("Error:", error);
-            alert("An error occurred while deleting the appointment.");
+            console.error("Errore:", error);
+            alert("Errore durante l'eliminazione dell'appuntamento.");
         });
     }
 
