@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
-    <title>User Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Utente</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         .big-btn {
@@ -14,40 +16,46 @@
 </head>
 <body>
     <div class="container">
-        <h2>Welcome, {{ session['username'] }}</h2>
-        <h3>Your Appointments</h3>
+        <h2>Benvenuto, {{ session['username'] }}</h2>
+        <h3>I Tuoi Appuntamenti</h3>
 
         {% if appointments %}
             <table>
-                <tr>
-                    <th>Service</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Actions</th>
-                </tr>
-                {% for appointment in appointments %}
-                <tr>
-                    <td>{{ appointment[1] }}</td>
-                    <td>{{ appointment[2] }}</td>
-                    <td>{{ appointment[3] }}</td>
-                    <td>
-                        <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
-                            <button class="big-btn">Edit</button>
-                        </a>
-                        <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}">Delete</button>
-                    </td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <th>Servizio</th>
+                        <th>Data</th>
+                        <th>Ora</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td>{{ appointment[1] }}</td>
+                        <td>{{ appointment[2] }}</td>
+                        <td>{{ appointment[3] }}</td>
+                        <td>
+                            <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
+                                <button class="big-btn">Modifica</button>
+                            </a>
+                            <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}">Elimina</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         {% else %}
-            <p>No appointments booked.</p>
+            <p>Nessun appuntamento prenotato.</p>
         {% endif %}
 
-        <a href="{{ url_for('book') }}"><button class="big-btn">Book a new Appointment</button></a>
+        <a href="{{ url_for('book') }}"><button class="big-btn">Prenota un Appuntamento</button></a>
+        <a href="{{ url_for('account') }}"><button class="big-btn">Il Mio Profilo</button></a>
         <a href="{{ url_for('logout') }}"><button class="logout-btn">Logout</button></a>
-        <a href="{{ url_for('index') }}">Back to Home</a>
+        <a href="{{ url_for('index') }}">Torna alla Home</a>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
+

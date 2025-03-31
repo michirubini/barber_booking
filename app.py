@@ -301,6 +301,42 @@ def admin_get_day_slots():
 
     return jsonify({'slots': slots})
 
+@app.route('/account', methods=['GET', 'POST'])
+def account():
+    if 'user_id' not in session:
+        return redirect(url_for('login_user'))
+
+    user_id = session['user_id']
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        surname = request.form['surname']
+        phone = request.form['phone']
+        username = request.form['username']
+        password = request.form['password']
+
+        # Check for duplicate username (excluding current user)
+        cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, user_id))
+        if cursor.fetchone():
+            conn.close()
+            return render_template('account.html', error="Username già in uso.", user=None)
+
+        cursor.execute("""
+            UPDATE users
+            SET name = ?, surname = ?, phone = ?, username = ?, password = ?
+            WHERE id = ?
+        """, (name, surname, phone, username, password, user_id))
+        conn.commit()
+        conn.close()
+        session['username'] = username  # Aggiorna anche la sessione
+        return redirect(url_for('user_dashboard'))
+
+    cursor.execute("SELECT name, surname, phone, username, password FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    return render_template('account.html', user=user)
 
 @app.route('/logout')
 def logout():

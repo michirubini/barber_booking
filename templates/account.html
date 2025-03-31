@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Il Mio Account</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Il Mio Profilo</h2>
+
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+
+        {% if user %}
+        <form method="post">
+            <label for="name">Nome:</label>
+            <input type="text" id="name" name="name" value="{{ user[0] }}" required>
+
+            <label for="surname">Cognome:</label>
+            <input type="text" id="surname" name="surname" value="{{ user[1] }}" required>
+
+            <label for="phone">Telefono:</label>
+            <input type="text" id="phone" name="phone" value="{{ user[2] }}" required>
+
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" value="{{ user[3] }}" required>
+
+            <label for="password">Password:</label>
+            <input type="text" id="password" name="password" value="{{ user[4] }}" required>
+
+            <button type="submit" class="big-btn">Salva Modifiche</button>
+        </form>
+        {% endif %}
+
+        <a href="{{ url_for('user_dashboard') }}">Torna al Dashboard</a>
+    </div>
+</body>
+</html>
