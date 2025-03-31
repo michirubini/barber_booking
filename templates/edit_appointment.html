@@ -61,6 +61,10 @@
   <div class="container">
     <h2>Modifica Appuntamento</h2>
 
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
     <form method="post">
       <input type="hidden" name="date" id="selected-date" value="{{ appointment[2] }}" required>
       <input type="hidden" name="time" id="selected-time" value="{{ appointment[3] }}" required>
@@ -126,8 +130,7 @@
       monthYearLabel.textContent = currentMonth.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
 
       for (let i = 0; i < firstDay; i++) {
-        const empty = document.createElement('div');
-        calendar.appendChild(empty);
+        calendar.appendChild(document.createElement('div'));
       }
 
       for (let d = 1; d <= daysInMonth; d++) {
@@ -204,12 +207,12 @@
     }
 
     prevBtn.addEventListener('click', () => {
-      currentDate.setMonth(currentDate.getMonth() - 1);
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
       renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
     });
 
     nextBtn.addEventListener('click', () => {
-      currentDate.setMonth(currentDate.getMonth() + 1);
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
       renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
     });
 

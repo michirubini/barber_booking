@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -94,6 +94,7 @@ def register():
 def user_dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login_user'))
+
     user_id = session['user_id']
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
@@ -120,7 +121,7 @@ def admin_dashboard():
         FROM appointments 
         JOIN users ON appointments.user_id = users.id
         WHERE appointments.date >= ?
-        ORDER BY appointments.date, appointments.time
+        ORDER BY DATE(appointments.date), TIME(appointments.time)
     """, (today,))
     
     appointments = cursor.fetchall()
@@ -139,7 +140,6 @@ def book():
         user_id = session['user_id']
 
         try:
-            # Fix timezone offset (+1 hour for Italy CET/CEST)
             tz_offset = timedelta(hours=1)
             date_obj = datetime.strptime(date, "%Y-%m-%d") + tz_offset
             weekday = date_obj.weekday()
@@ -171,11 +171,9 @@ def book():
 def edit_appointment(appointment_id):
     if 'user_id' not in session:
         return redirect(url_for('login_user'))
-
+    
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
-
-    # Recupera l'appuntamento
     cursor.execute("SELECT id, service, date, time FROM appointments WHERE id = ? AND user_id = ?",
                    (appointment_id, session['user_id']))
     appointment = cursor.fetchone()
@@ -184,17 +182,13 @@ def edit_appointment(appointment_id):
         conn.close()
         return redirect(url_for('user_dashboard'))
 
-    # Controllo orario: blocca se manca meno di 1 ora
-    date_str, time_str = appointment[2], appointment[3]
-    appointment_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+    appointment_datetime = datetime.strptime(f"{appointment[2]} {appointment[3]}", "%Y-%m-%d %H:%M")
     now = datetime.now()
-
     if now > appointment_datetime - timedelta(hours=1):
         conn.close()
         return render_template("edit_appointment.html", appointment=appointment,
                                error="Non puoi modificare l'appuntamento meno di un'ora prima.")
 
-    # Se POST: aggiorna l'appuntamento
     if request.method == 'POST':
         new_service = request.form['service']
         new_date = request.form['date']
@@ -208,16 +202,13 @@ def edit_appointment(appointment_id):
     conn.close()
     return render_template('edit_appointment.html', appointment=appointment)
 
-
 @app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
 def delete_appointment(appointment_id):
     if 'user_id' not in session and 'admin' not in session:
-        return jsonify({'success': False, 'message': 'Non autorizzato'}), 403
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
 
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
-
-    # Recupera data e ora dell'appuntamento
     cursor.execute("SELECT date, time FROM appointments WHERE id = ?", (appointment_id,))
     result = cursor.fetchone()
 
@@ -227,10 +218,8 @@ def delete_appointment(appointment_id):
 
     date_str, time_str = result
     appointment_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-
     now = datetime.now()
 
-    # Controllo: utente normale non può eliminare se manca meno di 1 ora
     if 'user_id' in session and now > appointment_datetime - timedelta(hours=1):
         conn.close()
         return jsonify({
@@ -238,7 +227,6 @@ def delete_appointment(appointment_id):
             'message': 'Non puoi cancellare un appuntamento meno di un’ora prima.'
         }), 403
 
-    # Esecuzione cancellazione
     if 'admin' in session:
         cursor.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
     else:
@@ -247,24 +235,6 @@ def delete_appointment(appointment_id):
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'message': 'Appuntamento eliminato'})
-
-
-@app.route('/get_booked_times', methods=['POST'])
-def get_booked_times():
-    data = request.get_json()
-    date = data.get('date')
-    conn = sqlite3.connect('bookings.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT time, COUNT(*) FROM appointments WHERE date = ? GROUP BY time", (date,))
-    time_counts = cursor.fetchall()
-    conn.close()
-    fully_booked = [row[0] for row in time_counts if row[1] >= 2]
-    return jsonify({'booked_times': fully_booked})
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('index'))
 
 @app.route('/delete_all_appointments', methods=['POST'])
 def delete_all_appointments():
@@ -278,6 +248,59 @@ def delete_all_appointments():
     conn.close()
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/get_booked_times', methods=['POST'])
+def get_booked_times():
+    data = request.get_json()
+    date = data.get('date')
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT time, COUNT(*) FROM appointments WHERE date = ? GROUP BY time", (date,))
+    time_counts = cursor.fetchall()
+    conn.close()
+    fully_booked = [row[0] for row in time_counts if row[1] >= 2]
+    return jsonify({'booked_times': fully_booked})
+
+@app.route('/admin_get_day_slots', methods=['POST'])
+def admin_get_day_slots():
+    if 'admin' not in session:
+        return jsonify({'error': 'Non autorizzato'}), 403
+
+    data = request.get_json()
+    date = data.get('date')
+
+    if not date:
+        return jsonify({'error': 'Data mancante'}), 400
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT users.username, appointments.service, appointments.time
+        FROM appointments
+        JOIN users ON users.id = appointments.user_id
+        WHERE appointments.date = ?
+    """, (date,))
+    records = cursor.fetchall()
+    conn.close()
+
+    times = [
+        '09:00','09:30','10:00','10:30','11:00','11:30',
+        '12:00','12:30','13:00','13:30','14:00','14:30',
+        '15:00','15:30','16:00','16:30','17:00','17:30',
+        '18:00','18:30','19:00'
+    ]
+
+    slots = {t: [] for t in times}
+
+    for username, servizio, time in records:
+        if time in slots:
+            slots[time].append({'username': username, 'servizio': servizio})
+
+    return jsonify({'slots': slots})
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
 if __name__ == '__main__':
     app.run(debug=True)
-

@@ -163,12 +163,12 @@
     }
 
     prevBtn.addEventListener('click', () => {
-      currentDate.setMonth(currentDate.getMonth() - 1);
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
       renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
     });
 
     nextBtn.addEventListener('click', () => {
-      currentDate.setMonth(currentDate.getMonth() + 1);
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
       renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
     });
 

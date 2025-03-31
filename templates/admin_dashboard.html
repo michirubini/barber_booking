@@ -1,63 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
-  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
-    .container {
-      max-width: 1200px;
-      width: 95%;
-      margin: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: #fff;
-    }
-
-    th, td {
-      padding: 12px;
+    .view-toggle {
+      margin: 15px 0;
       text-align: center;
-      border: 1px solid #ddd;
-      word-wrap: break-word;
     }
 
-    th {
+    .calendar-view, .list-view {
+      display: none;
+    }
+
+    .active-view {
+      display: block;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 20px;
+    }
+
+    .calendar-day {
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .calendar-day:hover {
+      background-color: #d0d0d0;
+    }
+
+    .calendar-day.selected {
       background-color: #007bff;
       color: white;
     }
 
+    .slot {
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 8px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slot-time {
+      font-weight: bold;
+    }
+
+    .slot-entry {
+      padding: 5px;
+      border-radius: 4px;
+      margin-top: 5px;
+      background-color: #e6ffe6;
+    }
+
+    .slot-entry.booked {
+      background-color: #ffe6e6;
+    }
+
+    .slot-entry.empty {
+      background-color: #e6ffe6;
+      font-style: italic;
+      color: #666;
+    }
+
     @media (max-width: 768px) {
-      table, thead, tbody, th, td, tr {
-        display: block;
+      .calendar {
+        grid-template-columns: repeat(4, 1fr);
       }
 
-      thead {
-        display: none;
-      }
-
-      tr {
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 10px;
-        background-color: #fff;
-      }
-
-      td {
-        text-align: left;
-        padding: 8px;
-        border: none;
-      }
-
-      td::before {
-        content: attr(data-label);
-        font-weight: bold;
-        display: block;
+      .slot {
+        font-size: 14px;
       }
     }
   </style>
@@ -65,53 +88,165 @@
 <body>
   <div class="container">
     <h2>Admin Dashboard</h2>
-    <h3>All Appointments</h3>
 
-    {% if appointments %}
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Nome</th>
-            <th>Cognome</th>
-            <th>Telefono</th>
-            <th>Servizio</th>
-            <th>Data</th>
-            <th>Orario</th>
-            <th>Azioni</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for appointment in appointments %}
+    <div class="view-toggle">
+      <button onclick="showListView()">📄 Lista Appuntamenti</button>
+      <button onclick="showCalendarView()">📅 Vista Calendario</button>
+    </div>
+
+    <div id="list-view" class="list-view active-view">
+      <h3>Appuntamenti Futuri</h3>
+      {% if appointments %}
+        <table>
+          <thead>
             <tr>
-              <td data-label="ID">{{ appointment[0] }}</td>
-              <td data-label="Username">{{ appointment[1] }}</td>
-              <td data-label="Nome">{{ appointment[2] }}</td>
-              <td data-label="Cognome">{{ appointment[3] }}</td>
-              <td data-label="Telefono">{{ appointment[4] }}</td>
-              <td data-label="Servizio">{{ appointment[5] }}</td>
-              <td data-label="Data">{{ appointment[6] }}</td>
-              <td data-label="Orario">{{ appointment[7] }}</td>
-              <td data-label="Azioni">
-                <button class="delete-appointment" data-id="{{ appointment[0] }}">Elimina</button>
-              </td>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Nome</th>
+              <th>Cognome</th>
+              <th>Telefono</th>
+              <th>Servizio</th>
+              <th>Data</th>
+              <th>Orario</th>
+              <th>Azioni</th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p>Nessun appuntamento disponibile.</p>
-    {% endif %}
+          </thead>
+          <tbody>
+            {% for appointment in appointments %}
+              <tr>
+                <td>{{ appointment[0] }}</td>
+                <td>{{ appointment[1] }}</td>
+                <td>{{ appointment[2] }}</td>
+                <td>{{ appointment[3] }}</td>
+                <td>{{ appointment[4] }}</td>
+                <td>{{ appointment[5] }}</td>
+                <td>{{ appointment[6] }}</td>
+                <td>{{ appointment[7] }}</td>
+                <td><button class="delete-appointment" data-id="{{ appointment[0] }}">Elimina</button></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>Nessun appuntamento disponibile.</p>
+      {% endif %}
+    </div>
+
+    <div id="calendar-view" class="calendar-view">
+      <h3>Calendario Appuntamenti</h3>
+      <div class="calendar-controls">
+        <button onclick="prevMonth()">◀</button>
+        <span id="month-label"></span>
+        <button onclick="nextMonth()">▶</button>
+      </div>
+      <div id="admin-calendar" class="calendar"></div>
+      <h3 id="selected-date-label">Seleziona un giorno</h3>
+      <div id="admin-slots"></div>
+    </div>
+
+    <form action="{{ url_for('delete_all_appointments') }}" method="post" onsubmit="return confirm('Sei sicuro di voler eliminare tutti gli appuntamenti?');">
+      <button type="submit" class="big-btn" style="background-color: darkred;">Elimina Tutti gli Appuntamenti</button>
+    </form>
 
     <a href="{{ url_for('logout') }}"><button class="logout-btn">Logout</button></a>
     <a href="{{ url_for('index') }}">Torna alla Home</a>
   </div>
 
-  <form action="{{ url_for('delete_all_appointments') }}" method="post" onsubmit="return confirm('Sei sicuro di voler eliminare tutti gli appuntamenti?');">
-    <button type="submit" class="big-btn" style="background-color: darkred;">Elimina Tutti gli Appuntamenti</button>
-  </form>
+  <script>
+    let currentDate = new Date();
 
+    function showListView() {
+      document.getElementById("list-view").classList.add("active-view");
+      document.getElementById("calendar-view").classList.remove("active-view");
+    }
+
+    function showCalendarView() {
+      document.getElementById("calendar-view").classList.add("active-view");
+      document.getElementById("list-view").classList.remove("active-view");
+    }
+
+    function formatDate(date) {
+      return date.toISOString().split('T')[0];
+    }
+
+    function renderCalendar(year, month) {
+      const calendarEl = document.getElementById("admin-calendar");
+      const monthLabel = document.getElementById("month-label");
+      calendarEl.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      monthLabel.textContent = new Date(year, month).toLocaleString('it-IT', { month: 'long', year: 'numeric' });
+
+      for (let i = 0; i < firstDay; i++) {
+        calendarEl.appendChild(document.createElement('div'));
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d);
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        div.textContent = d;
+        div.addEventListener('click', () => {
+          document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
+          div.classList.add('selected');
+          document.getElementById('selected-date-label').textContent = `Appuntamenti per ${formatDate(date)}`;
+          loadDaySlots(formatDate(date));
+        });
+        calendarEl.appendChild(div);
+      }
+    }
+
+    function loadDaySlots(dateStr) {
+      const container = document.getElementById("admin-slots");
+      container.innerHTML = 'Caricamento...';
+      fetch('/admin_get_day_slots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: dateStr })
+      })
+      .then(res => res.json())
+      .then(data => {
+        container.innerHTML = '';
+        const slots = data.slots;
+        for (const time in slots) {
+          const div = document.createElement('div');
+          div.classList.add('slot');
+          const timeLabel = document.createElement('div');
+          timeLabel.classList.add('slot-time');
+          timeLabel.textContent = time;
+          div.appendChild(timeLabel);
+
+          const prenotazioni = slots[time];
+          for (let i = 0; i < 2; i++) {
+            const entry = document.createElement('div');
+            entry.classList.add('slot-entry');
+            if (prenotazioni[i]) {
+              entry.classList.add('booked');
+              entry.textContent = `${prenotazioni[i].username} – ${prenotazioni[i].servizio}`;
+            } else {
+              entry.classList.add('empty');
+              entry.textContent = 'Slot libero';
+            }
+            div.appendChild(entry);
+          }
+          container.appendChild(div);
+        }
+      });
+    }
+
+    function prevMonth() {
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+      renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+    }
+
+    function nextMonth() {
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+      renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+    }
+
+    renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+  </script>
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
