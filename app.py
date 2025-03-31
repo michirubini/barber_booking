@@ -221,6 +221,17 @@ def get_booked_times():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+@app.route('/delete_all_appointments', methods=['POST'])
+def delete_all_appointments():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM appointments")
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)
