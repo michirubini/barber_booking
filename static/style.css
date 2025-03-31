@@ -144,8 +144,8 @@ th {
   text-align: center;
   padding: 10px;
   border-radius: 6px;
-  background-color: #f0f0f0; /* più chiaro */
-  color: #000000; /* testo nero */
+  background-color: #f0f0f0;
+  color: #000000;
   cursor: pointer;
   font-weight: bold;
   white-space: pre-line;
@@ -172,19 +172,46 @@ th {
 }
 
 /* Time Slots */
-.time-slot, .slot-entry {
-  background-color: #2c2c2c;
-  color: #fff;
+.time-slot {
+  padding: 10px;
+  margin: 5px;
+  background-color: #f0f0f0;
+  color: #000000;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
 }
 
-.time-slot.disabled, .slot-entry.booked {
-  background-color: #555;
-  color: #ccc;
+.time-slot.disabled {
+  background-color: #cccccc;
+  color: #666;
+  cursor: not-allowed;
 }
 
-.time-slot.selected, .slot-entry.selected {
+.time-slot.selected {
   background-color: #28a745;
-  color: #fff;
+  color: #ffffff;
+}
+
+/* Admin slot entries */
+.slot-entry {
+  padding: 5px;
+  border-radius: 4px;
+  margin-top: 5px;
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+.slot-entry.booked {
+  background-color: #ffe6e6;
+  color: #000;
+}
+
+.slot-entry.empty {
+  background-color: #e6ffe6;
+  color: #000;
+  font-style: italic;
 }
 
 /* Responsive Enhancements */
@@ -246,4 +273,3 @@ th {
     margin-bottom: 5px;
   }
 }
-
