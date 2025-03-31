@@ -1,103 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        .container {
-            max-width: 1200px; /* LARGHEZZA MAGGIORE PER TABELLA */
-            width: 95%;
-            margin: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #fff;
-        }
-        th, td {
-            padding: 12px;
-            text-align: center;
-            border: 1px solid #ddd;
-            word-wrap: break-word;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        @media (max-width: 768px) {
-            table, thead, tbody, th, td, tr {
-                display: block;
-            }
-            thead {
-                display: none;
-            }
-            tr {
-                margin-bottom: 15px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                padding: 10px;
-            }
-            td {
-                text-align: left;
-                padding: 8px;
-                border: none;
-            }
-            td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                display: block;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .container {
+      max-width: 1200px;
+      width: 95%;
+      margin: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+      word-wrap: break-word;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        background-color: #fff;
+      }
+
+      td {
+        text-align: left;
+        padding: 8px;
+        border: none;
+      }
+
+      td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Admin Dashboard</h2>
-        <h3>All Appointments</h3>
+  <div class="container">
+    <h2>Admin Dashboard</h2>
+    <h3>All Appointments</h3>
 
-        {% if appointments %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Nome</th>
-                        <th>Cognome</th>
-                        <th>Telefono</th>
-                        <th>Servizio</th>
-                        <th>Data</th>
-                        <th>Orario</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for appointment in appointments %}
-                    <tr>
-                        <td data-label="ID">{{ appointment[0] }}</td>
-                        <td data-label="Username">{{ appointment[1] }}</td>
-                        <td data-label="Nome">{{ appointment[2] }}</td>
-                        <td data-label="Cognome">{{ appointment[3] }}</td>
-                        <td data-label="Telefono">{{ appointment[4] }}</td>
-                        <td data-label="Servizio">{{ appointment[5] }}</td>
-                        <td data-label="Data">{{ appointment[6] }}</td>
-                        <td data-label="Orario">{{ appointment[7] }}</td>
-                        <td data-label="Actions">
-                            <button class="delete-appointment" data-id="{{ appointment[0] }}">Delete</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No appointments available.</p>
-        {% endif %}
+    {% if appointments %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Nome</th>
+            <th>Cognome</th>
+            <th>Telefono</th>
+            <th>Servizio</th>
+            <th>Data</th>
+            <th>Orario</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for appointment in appointments %}
+            <tr>
+              <td data-label="ID">{{ appointment[0] }}</td>
+              <td data-label="Username">{{ appointment[1] }}</td>
+              <td data-label="Nome">{{ appointment[2] }}</td>
+              <td data-label="Cognome">{{ appointment[3] }}</td>
+              <td data-label="Telefono">{{ appointment[4] }}</td>
+              <td data-label="Servizio">{{ appointment[5] }}</td>
+              <td data-label="Data">{{ appointment[6] }}</td>
+              <td data-label="Orario">{{ appointment[7] }}</td>
+              <td data-label="Azioni">
+                <button class="delete-appointment" data-id="{{ appointment[0] }}">Elimina</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Nessun appuntamento disponibile.</p>
+    {% endif %}
 
-        <a href="{{ url_for('logout') }}"><button class="logout-btn">Logout</button></a>
-        <a href="{{ url_for('index') }}">Back to Home</a>
-    </div>
+    <a href="{{ url_for('logout') }}"><button class="logout-btn">Logout</button></a>
+    <a href="{{ url_for('index') }}">Torna alla Home</a>
+  </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
