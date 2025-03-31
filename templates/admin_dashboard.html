@@ -45,6 +45,10 @@
       color: white;
     }
 
+    .calendar-day.today {
+      border: 2px solid #28a745;
+    }
+
     .day-labels {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -197,11 +201,19 @@
         calendarEl.appendChild(document.createElement('div'));
       }
 
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month, d);
+        date.setHours(0, 0, 0, 0);
         const weekday = dayNames[date.getDay()];
         const div = document.createElement('div');
         div.className = 'calendar-day';
+        if (date.getTime() === today.getTime()) {
+          div.classList.add('today');
+        }
+
         div.textContent = `${d}\n${weekday}`;
         div.addEventListener('click', () => {
           document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
@@ -209,6 +221,7 @@
           document.getElementById('selected-date-label').textContent = `Appuntamenti per ${formatDate(date)}`;
           loadDaySlots(formatDate(date));
         });
+
         calendarEl.appendChild(div);
       }
     }
@@ -239,7 +252,7 @@
             entry.classList.add('slot-entry');
             if (prenotazioni[i]) {
               entry.classList.add('booked');
-              entry.textContent = `${prenotazioni[i].username} – ${prenotazioni[i].servizio}`;
+              entry.textContent = `${prenotazioni[i].name} (${prenotazioni[i].phone}) – ${prenotazioni[i].servizio}`;
             } else {
               entry.classList.add('empty');
               entry.textContent = 'Slot libero';
