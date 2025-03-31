@@ -171,8 +171,30 @@ def book():
 def edit_appointment(appointment_id):
     if 'user_id' not in session:
         return redirect(url_for('login_user'))
+
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
+
+    # Recupera l'appuntamento
+    cursor.execute("SELECT id, service, date, time FROM appointments WHERE id = ? AND user_id = ?",
+                   (appointment_id, session['user_id']))
+    appointment = cursor.fetchone()
+
+    if not appointment:
+        conn.close()
+        return redirect(url_for('user_dashboard'))
+
+    # Controllo orario: blocca se manca meno di 1 ora
+    date_str, time_str = appointment[2], appointment[3]
+    appointment_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+    now = datetime.now()
+
+    if now > appointment_datetime - timedelta(hours=1):
+        conn.close()
+        return render_template("edit_appointment.html", appointment=appointment,
+                               error="Non puoi modificare l'appuntamento meno di un'ora prima.")
+
+    # Se POST: aggiorna l'appuntamento
     if request.method == 'POST':
         new_service = request.form['service']
         new_date = request.form['date']
@@ -182,28 +204,50 @@ def edit_appointment(appointment_id):
         conn.commit()
         conn.close()
         return redirect(url_for('user_dashboard'))
-    cursor.execute("SELECT id, service, date, time FROM appointments WHERE id = ? AND user_id = ?",
-                   (appointment_id, session['user_id']))
-    appointment = cursor.fetchone()
+
     conn.close()
-    if appointment:
-        return render_template('edit_appointment.html', appointment=appointment)
-    else:
-        return redirect(url_for('user_dashboard'))
+    return render_template('edit_appointment.html', appointment=appointment)
+
 
 @app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
 def delete_appointment(appointment_id):
     if 'user_id' not in session and 'admin' not in session:
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        return jsonify({'success': False, 'message': 'Non autorizzato'}), 403
+
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
+
+    # Recupera data e ora dell'appuntamento
+    cursor.execute("SELECT date, time FROM appointments WHERE id = ?", (appointment_id,))
+    result = cursor.fetchone()
+
+    if not result:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Appuntamento non trovato'}), 404
+
+    date_str, time_str = result
+    appointment_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+
+    now = datetime.now()
+
+    # Controllo: utente normale non può eliminare se manca meno di 1 ora
+    if 'user_id' in session and now > appointment_datetime - timedelta(hours=1):
+        conn.close()
+        return jsonify({
+            'success': False,
+            'message': 'Non puoi cancellare un appuntamento meno di un’ora prima.'
+        }), 403
+
+    # Esecuzione cancellazione
     if 'admin' in session:
         cursor.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
     else:
         cursor.execute("DELETE FROM appointments WHERE id = ? AND user_id = ?", (appointment_id, session['user_id']))
+    
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'message': 'Appuntamento eliminato'})
+
 
 @app.route('/get_booked_times', methods=['POST'])
 def get_booked_times():
@@ -221,6 +265,7 @@ def get_booked_times():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
 @app.route('/delete_all_appointments', methods=['POST'])
 def delete_all_appointments():
     if 'admin' not in session:
