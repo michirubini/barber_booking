@@ -90,7 +90,7 @@
       <button type="submit">Aggiorna</button>
     </form>
 
-    <a href="{{ url_for('user_dashboard') }}">Annulla</a>
+    <a href="{{ url_for('user_dashboard') if session.get('user_id') else url_for('admin_dashboard') }}">Annulla</a>
   </div>
 
   <script>

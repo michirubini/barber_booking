@@ -145,7 +145,12 @@
                 <td>{{ appointment[5] }}</td>
                 <td>{{ appointment[6] }}</td>
                 <td>{{ appointment[7] }}</td>
-                <td><button class="delete-appointment" data-id="{{ appointment[0] }}">Elimina</button></td>
+                <td>
+                  <a href="{{ url_for('admin_edit_appointment', appointment_id=appointment[0]) }}">
+                    <button class="big-btn">Modifica</button>
+                  </a>
+                  <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}">Elimina</button>
+                </td>
               </tr>
             {% endfor %}
           </tbody>

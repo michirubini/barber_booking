@@ -260,6 +260,34 @@ def get_booked_times():
     fully_booked = [row[0] for row in time_counts if row[1] >= 2]
     return jsonify({'booked_times': fully_booked})
 
+@app.route('/admin_edit_appointment/<int:appointment_id>', methods=['GET', 'POST'])
+def admin_edit_appointment(appointment_id):
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, service, date, time FROM appointments WHERE id = ?", (appointment_id,))
+    appointment = cursor.fetchone()
+
+    if not appointment:
+        conn.close()
+        return redirect(url_for('admin_dashboard'))
+
+    if request.method == 'POST':
+        new_service = request.form['service']
+        new_date = request.form['date']
+        new_time = request.form['time']
+        cursor.execute("UPDATE appointments SET service = ?, date = ?, time = ? WHERE id = ?",
+                       (new_service, new_date, new_time, appointment_id))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('admin_dashboard'))
+
+    conn.close()
+    return render_template('edit_appointment.html', appointment=appointment)
+
+
 @app.route('/admin_get_day_slots', methods=['POST'])
 def admin_get_day_slots():
     if 'admin' not in session:
