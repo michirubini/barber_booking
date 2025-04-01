@@ -271,6 +271,25 @@ def admin_get_day_slots():
     if not date:
         return jsonify({'error': 'Data mancante'}), 400
 
+    try:
+        weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+    except ValueError:
+        return jsonify({'error': 'Formato data non valido'}), 400
+
+    if weekday == 5:
+        times = [
+            '09:00','09:30','10:00','10:30','11:00','11:30',
+            '12:00','12:30','13:00','13:30','14:00','14:30',
+            '15:00'
+        ]
+    else:
+        times = [
+            '09:00','09:30','10:00','10:30','11:00','11:30',
+            '12:00','12:30','13:00','13:30','14:00','14:30',
+            '15:00','15:30','16:00','16:30','17:00','17:30',
+            '18:00','18:30','19:00'
+        ]
+
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
     cursor.execute("""
@@ -281,13 +300,6 @@ def admin_get_day_slots():
     """, (date,))
     records = cursor.fetchall()
     conn.close()
-
-    times = [
-        '09:00','09:30','10:00','10:30','11:00','11:30',
-        '12:00','12:30','13:00','13:30','14:00','14:30',
-        '15:00','15:30','16:00','16:30','17:00','17:30',
-        '18:00','18:30','19:00'
-    ]
 
     slots = {t: [] for t in times}
 
@@ -317,7 +329,6 @@ def account():
         username = request.form['username']
         password = request.form['password']
 
-        # Check for duplicate username (excluding current user)
         cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, user_id))
         if cursor.fetchone():
             conn.close()
@@ -330,7 +341,7 @@ def account():
         """, (name, surname, phone, username, password, user_id))
         conn.commit()
         conn.close()
-        session['username'] = username  # Aggiorna anche la sessione
+        session['username'] = username
         return redirect(url_for('user_dashboard'))
 
     cursor.execute("SELECT name, surname, phone, username, password FROM users WHERE id = ?", (user_id,))
