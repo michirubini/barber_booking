@@ -128,6 +128,7 @@ def admin_dashboard():
     conn.close()
     return render_template('admin_dashboard.html', appointments=appointments)
 
+
 @app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
 def delete_appointment(appointment_id):
     conn = sqlite3.connect('bookings.db')

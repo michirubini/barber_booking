@@ -215,6 +215,7 @@
   </div>
 
   <script>
+    
     let currentDate = new Date();
 
     function showListView() {
@@ -342,6 +343,26 @@
 
     renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
   </script>
+  <script>
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('delete-appointment')) {
+        const id = e.target.dataset.id;
+        if (confirm('Sei sicuro di voler eliminare questo appuntamento?')) {
+          fetch(`/delete_appointment/${id}`, {
+            method: 'POST'
+          })
+          .then(res => {
+            if (res.status === 204) {
+              location.reload();
+            } else {
+              alert('Errore durante l\'eliminazione.');
+            }
+          });
+        }
+      }
+    });
+    </script>
+    
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
