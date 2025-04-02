@@ -6,29 +6,16 @@
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
-
-    .container {
-      max-width: 1300px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .view-toggle {
-      margin: 15px 0;
-      text-align: center;
-    }
-
     .calendar-view, .list-view {
       display: none;
     }
-
     .active-view {
       display: block;
     }
-    
     .container {
-      max-width: 1400px;
+      max-width: 1200px;
+      width: 95%;
       margin: auto;
-      padding: 20px;
     }
     .calendar {
       display: grid;
@@ -36,7 +23,6 @@
       gap: 5px;
       margin-bottom: 20px;
     }
-
     .calendar-day {
       text-align: center;
       padding: 10px;
@@ -46,20 +32,13 @@
       font-weight: bold;
       white-space: pre-line;
     }
-
-    .calendar-day:hover {
-      background-color: #d0d0d0;
+    .calendar-day.today {
+      border: 2px solid #28a745;
     }
-
     .calendar-day.selected {
       background-color: #007bff;
       color: white;
     }
-
-    .calendar-day.today {
-      border: 2px solid #28a745;
-    }
-
     .day-labels {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -67,7 +46,6 @@
       margin-bottom: 5px;
       font-weight: bold;
     }
-
     .slot {
       border: 1px solid #ccc;
       padding: 10px;
@@ -76,35 +54,21 @@
       display: flex;
       flex-direction: column;
     }
-
     .slot-time {
       font-weight: bold;
     }
-
     .slot-entry {
       padding: 5px;
       border-radius: 4px;
       margin-top: 5px;
-      background-color: #e6ffe6;
     }
-
     .slot-entry.booked {
       background-color: #ffe6e6;
     }
-
     .slot-entry.empty {
       background-color: #e6ffe6;
       font-style: italic;
       color: #666;
-    }
-
-    @media (max-width: 768px) {
-      .calendar, .day-labels {
-        grid-template-columns: repeat(4, 1fr);
-      }
-      .slot {
-        font-size: 14px;
-      }
     }
   </style>
 </head>
@@ -117,8 +81,9 @@
       <button onclick="showCalendarView()">📅 Vista Calendario</button>
     </div>
 
+    <!-- LISTA -->
     <div id="list-view" class="list-view active-view">
-      <h3>Appuntamenti Futuri</h3>
+      <h3>Appuntamenti</h3>
       {% if appointments %}
         <table>
           <thead>
@@ -130,7 +95,7 @@
               <th>Telefono</th>
               <th>Servizio</th>
               <th>Data</th>
-              <th>Orario</th>
+              <th>Ora</th>
               <th>Azioni</th>
             </tr>
           </thead>
@@ -145,7 +110,12 @@
                 <td>{{ appointment[5] }}</td>
                 <td>{{ appointment[6] }}</td>
                 <td>{{ appointment[7] }}</td>
-                <td><button class="delete-appointment" data-id="{{ appointment[0] }}">Elimina</button></td>
+                <td>
+                  <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
+                    <button class="big-btn">Modifica</button>
+                  </a>
+                  <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}">Elimina</button>
+                </td>
               </tr>
             {% endfor %}
           </tbody>
@@ -155,6 +125,7 @@
       {% endif %}
     </div>
 
+    <!-- CALENDARIO -->
     <div id="calendar-view" class="calendar-view">
       <h3>Calendario Appuntamenti</h3>
       <div class="calendar-controls">
@@ -198,6 +169,16 @@
       return `${yyyy}-${mm}-${dd}`;
     }
 
+    function getTimeSlots(dateStr) {
+      const date = new Date(dateStr);
+      const weekday = date.getDay();
+      if (weekday === 6) {
+        return ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00'];
+      } else {
+        return ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00'];
+      }
+    }
+
     function renderCalendar(year, month) {
       const calendarEl = document.getElementById("admin-calendar");
       const monthLabel = document.getElementById("month-label");
@@ -218,14 +199,12 @@
       for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month, d);
         date.setHours(0, 0, 0, 0);
-        const weekday = dayNames[date.getDay()];
+        const weekday = date.getDay();
         const div = document.createElement('div');
         div.className = 'calendar-day';
-        if (date.getTime() === today.getTime()) {
-          div.classList.add('today');
-        }
+        if (date.getTime() === today.getTime()) div.classList.add('today');
 
-        div.textContent = `${d}\n${weekday}`;
+        div.textContent = `${d}\n${dayNames[weekday]}`;
         div.addEventListener('click', () => {
           document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
           div.classList.add('selected');
@@ -249,7 +228,9 @@
       .then(data => {
         container.innerHTML = '';
         const slots = data.slots;
-        for (const time in slots) {
+        const timeSlots = getTimeSlots(dateStr);
+
+        timeSlots.forEach(time => {
           const div = document.createElement('div');
           div.classList.add('slot');
           const timeLabel = document.createElement('div');
@@ -257,7 +238,7 @@
           timeLabel.textContent = time;
           div.appendChild(timeLabel);
 
-          const prenotazioni = slots[time];
+          const prenotazioni = slots[time] || [];
           for (let i = 0; i < 2; i++) {
             const entry = document.createElement('div');
             entry.classList.add('slot-entry');
@@ -271,7 +252,7 @@
             div.appendChild(entry);
           }
           container.appendChild(div);
-        }
+        });
       });
     }
 
@@ -287,6 +268,7 @@
 
     renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
   </script>
+
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

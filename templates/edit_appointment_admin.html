@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Modifica Appuntamento (Admin)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Modifica Appuntamento</h2>
+
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+      <input type="hidden" name="date" id="selected-date" value="{{ appointment[2] }}" required>
+      <input type="hidden" name="time" id="selected-time" value="{{ appointment[3] }}" required>
+
+      <label for="service">Servizio:</label>
+      <select name="service" required>
+        <option value="Taglio di capelli" {% if appointment[1] == 'Taglio di capelli' %} selected {% endif %}>Taglio di capelli</option>
+        <option value="Taglio di capelli + Barba" {% if appointment[1] == 'Taglio di capelli + Barba' %} selected {% endif %}>Taglio di capelli + Barba</option>
+        <option value="Solo Barba" {% if appointment[1] == 'Solo Barba' %} selected {% endif %}>Solo Barba</option>
+      </select>
+
+      <h3>Data</h3>
+      <input type="date" name="date" value="{{ appointment[2] }}" required>
+
+      <h3>Orario</h3>
+      <input type="time" name="time" value="{{ appointment[3] }}" required>
+
+      <button type="submit">Aggiorna</button>
+    </form>
+
+    <a href="{{ url_for('admin_dashboard') }}">Annulla</a>
+  </div>
+</body>
+</html>
