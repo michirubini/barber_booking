@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nuovo Appuntamento Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .calendar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Nuovo Appuntamento</h2>
+
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+      <input type="hidden" name="date" value="{{ date }}" required>
+      <input type="hidden" name="time" value="{{ time }}" required>
+
+      <label for="name">Nome:</label>
+      <input type="text" name="name" required>
+
+      <label for="surname">Cognome:</label>
+      <input type="text" name="surname" required>
+
+      <label for="phone">Telefono:</label>
+      <input type="text" name="phone" required>
+
+      <label for="service">Servizio:</label>
+      <select name="service" required>
+        <option value="Taglio di capelli">Taglio di capelli</option>
+        <option value="Taglio di capelli + Barba">Taglio di capelli + Barba</option>
+        <option value="Solo Barba">Solo Barba</option>
+      </select>
+
+      <button type="submit" class="big-btn">Conferma Appuntamento</button>
+    </form>
+
+    <a href="{{ url_for('admin_dashboard') }}">Annulla</a>
+  </div>
+</body>
+</html>

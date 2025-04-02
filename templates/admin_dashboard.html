@@ -41,15 +41,15 @@
       white-space: nowrap;
     }
 
-    th:nth-child(1), td:nth-child(1) { max-width: 40px; }   /* ID */
-    th:nth-child(2), td:nth-child(2) { max-width: 70px; }   /* Username */
-    th:nth-child(3), td:nth-child(3) { max-width: 70px; }   /* Nome */
-    th:nth-child(4), td:nth-child(4) { max-width: 80px; }   /* Cognome */
-    th:nth-child(5), td:nth-child(5) { max-width: 90px; }   /* Telefono */
-    th:nth-child(6), td:nth-child(6) { max-width: 100px; }  /* Servizio */
-    th:nth-child(7), td:nth-child(7) { max-width: 75px; }   /* Data */
-    th:nth-child(8), td:nth-child(8) { max-width: 65px; }   /* Orario */
-    th:nth-child(9), td:nth-child(9) { max-width: 120px; }  /* Azioni */
+    th:nth-child(1), td:nth-child(1) { max-width: 40px; }
+    th:nth-child(2), td:nth-child(2) { max-width: 70px; }
+    th:nth-child(3), td:nth-child(3) { max-width: 70px; }
+    th:nth-child(4), td:nth-child(4) { max-width: 80px; }
+    th:nth-child(5), td:nth-child(5) { max-width: 90px; }
+    th:nth-child(6), td:nth-child(6) { max-width: 100px; }
+    th:nth-child(7), td:nth-child(7) { max-width: 75px; }
+    th:nth-child(8), td:nth-child(8) { max-width: 65px; }
+    th:nth-child(9), td:nth-child(9) { max-width: 120px; }
 
     .big-btn {
       font-size: 12px;
@@ -122,6 +122,10 @@
       background-color: #e6ffe6;
       font-style: italic;
       color: #666;
+    }
+
+    .slot-entry .actions {
+      margin-top: 5px;
     }
 
     @media (max-width: 768px) {
@@ -293,12 +297,31 @@
           for (let i = 0; i < 2; i++) {
             const entry = document.createElement('div');
             entry.classList.add('slot-entry');
+
             if (prenotazioni[i]) {
               entry.classList.add('booked');
               entry.textContent = `${prenotazioni[i].name} (${prenotazioni[i].phone}) – ${prenotazioni[i].servizio}`;
+              const actions = document.createElement('div');
+              actions.className = 'actions';
+              const editBtn = document.createElement('a');
+              editBtn.href = `/admin_edit_appointment/${prenotazioni[i].id}`;
+              editBtn.innerText = '✏️';
+              editBtn.style.marginRight = '10px';
+              const deleteBtn = document.createElement('button');
+              deleteBtn.innerText = '🗑️';
+              deleteBtn.classList.add('delete-appointment');
+              deleteBtn.dataset.id = prenotazioni[i].id;
+              actions.appendChild(editBtn);
+              actions.appendChild(deleteBtn);
+              entry.appendChild(actions);
             } else {
               entry.classList.add('empty');
               entry.textContent = 'Slot libero';
+              const addBtn = document.createElement('a');
+              addBtn.href = `/admin_book?date=${dateStr}&time=${time}`;
+              addBtn.innerText = '➕';
+              addBtn.style.marginLeft = '10px';
+              entry.appendChild(addBtn);
             }
             div.appendChild(entry);
           }

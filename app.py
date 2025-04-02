@@ -376,6 +376,52 @@ def account():
     user = cursor.fetchone()
     conn.close()
     return render_template('account.html', user=user)
+@app.route('/admin_book', methods=['GET', 'POST'])
+def admin_book():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    date = request.args.get('date')
+    time = request.args.get('time')
+
+    if request.method == 'POST':
+        name = request.form['name']
+        surname = request.form['surname']
+        phone = request.form['phone']
+        service = request.form['service']
+        date = request.form['date']
+        time = request.form['time']
+
+        conn = sqlite3.connect('bookings.db')
+        cursor = conn.cursor()
+
+        # Trova o crea l'utente
+        cursor.execute("SELECT id FROM users WHERE phone = ?", (phone,))
+        user = cursor.fetchone()
+
+        if not user:
+            username = f"{name.lower()}.{surname.lower()}"[:20]
+            cursor.execute("INSERT INTO users (username, password, name, surname, phone) VALUES (?, ?, ?, ?, ?)",
+                           (username, 'admin-creato', name, surname, phone))
+            user_id = cursor.lastrowid
+        else:
+            user_id = user[0]
+
+        # Controlla se lo slot è già pieno
+        cursor.execute("SELECT COUNT(*) FROM appointments WHERE date = ? AND time = ?", (date, time))
+        if cursor.fetchone()[0] >= 2:
+            conn.close()
+            return render_template("admin_book.html", date=date, time=time, error="Slot già pieno")
+
+        cursor.execute("INSERT INTO appointments (user_id, service, date, time) VALUES (?, ?, ?, ?)",
+                       (user_id, service, date, time))
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template("admin_book.html", date=date, time=time)
+
 
 @app.route('/logout')
 def logout():
