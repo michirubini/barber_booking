@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuovo Appuntamento (Admin)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Nuovo Appuntamento</h2>
+
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST">
+      <label for="name">Nome:</label>
+      <input type="text" name="name" required>
+
+      <label for="surname">Cognome:</label>
+      <input type="text" name="surname" required>
+
+      <label for="phone">Telefono:</label>
+      <input type="text" name="phone" required>
+
+      <label for="service">Servizio:</label>
+      <select name="service" required>
+        <option value="">-- Seleziona un servizio --</option>
+        <option value="Taglio di capelli">Taglio di capelli</option>
+        <option value="Taglio di capelli + barba">Taglio di capelli + barba</option>
+        <option value="Solo barba">Solo barba</option>
+      </select>
+
+      <label for="date">Data:</label>
+      <input type="text" name="date" value="{{ date }}" readonly>
+
+      <label for="time">Orario:</label>
+      <input type="text" name="time" value="{{ time }}" readonly>
+
+      <button type="submit">Salva Appuntamento</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('admin_dashboard') }}">← Torna alla Dashboard</a>
+  </div>
+</body>
+</html>

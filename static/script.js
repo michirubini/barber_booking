@@ -1,32 +1,20 @@
-document.addEventListener("DOMContentLoaded", function () {
-    function deleteAppointment(appointmentId) {
-        if (!confirm("Sei sicuro di voler eliminare questo appuntamento?")) {
-            return;
-        }
-
-        fetch(`/delete_appointment/${appointmentId}`, {
-            method: 'POST',
-            headers: { "Content-Type": "application/json" }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert("Appuntamento eliminato con successo.");
-                location.reload();
+document.addEventListener('DOMContentLoaded', function () {
+    // Gestione eliminazione appuntamenti (sia da lista che da calendario)
+    document.querySelectorAll('.delete-appointment').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const id = this.dataset.id;
+        if (confirm('Sei sicuro di voler eliminare questo appuntamento?')) {
+          fetch(`/delete_appointment/${id}`, {
+            method: 'POST'
+          }).then(res => {
+            if (res.status === 204) {
+              location.reload();
             } else {
-                alert("Errore: " + data.message);
+              alert('Errore durante l\'eliminazione.');
             }
-        })
-        .catch(error => {
-            console.error("Errore:", error);
-            alert("Errore durante l'eliminazione dell'appuntamento.");
-        });
-    }
-
-    document.querySelectorAll(".delete-appointment").forEach(button => {
-        button.addEventListener("click", function () {
-            const appointmentId = this.dataset.id;
-            deleteAppointment(appointmentId);
-        });
+          });
+        }
+      });
     });
-});
+  });
+  
