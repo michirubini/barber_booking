@@ -255,8 +255,10 @@
       fetch('/admin_get_day_slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // AGGIUNGI QUESTO
         body: JSON.stringify({ date: dateStr })
       })
+      
       .then(res => res.json())
       .then(data => {
         container.innerHTML = '';
@@ -278,7 +280,7 @@
               entry.innerHTML = `
                 ${prenotazioni[i].name} (${prenotazioni[i].phone}) – ${prenotazioni[i].servizio}
                 <a href="/edit_appointment/${prenotazioni[i].id}">✏️</a>
-                <button class="delete-appointment" data-id="${prenotazioni[i].id}">🗑️</button>
+                <button class="admin-delete-appointment" data-id="${prenotazioni[i].id}">🗑️</button>
               `;
             } else {
               entry.classList.add('empty');
@@ -302,23 +304,6 @@
       renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
     }
 
-    // Gestione eliminazione dinamica (da calendario)
-    document.addEventListener('click', function (e) {
-      if (e.target.classList.contains('delete-appointment')) {
-        const id = e.target.dataset.id;
-        if (confirm('Vuoi eliminare questo appuntamento?')) {
-          fetch(`/delete_appointment/${id}`, {
-            method: 'POST'
-          }).then(res => {
-            if (res.status === 204) {
-              location.reload();
-            } else {
-              alert("Errore durante l'eliminazione.");
-            }
-          });
-        }
-      }
-    });
 
     renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
   </script>

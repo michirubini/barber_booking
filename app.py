@@ -39,6 +39,19 @@ init_db()
 def index():
     return render_template('index.html')
 
+@app.route('/admin_delete_appointment/<int:appointment_id>', methods=['POST'])
+def admin_delete_appointment(appointment_id):
+    if 'admin' not in session:
+        return '', 403
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
+    conn.commit()
+    conn.close()
+    return '', 204
+
+
 @app.route('/login_admin', methods=['GET', 'POST'])
 def login_admin():
     if request.method == 'POST':
@@ -212,33 +225,42 @@ def edit_appointment(appointment_id):
 
 @app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
 def delete_appointment(appointment_id):
-    if 'user_id' not in session and 'admin' not in session:
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT date, time FROM appointments WHERE id = ?", (appointment_id,))
+
+    # Verifica se l'appuntamento esiste
+    cursor.execute("SELECT user_id, date, time FROM appointments WHERE id = ?", (appointment_id,))
     result = cursor.fetchone()
+
     if not result:
         conn.close()
-        return jsonify({'success': False, 'message': 'Appuntamento non trovato'}), 404
+        return '', 404
 
-    date_str, time_str = result
+    user_id, date_str, time_str = result
     appointment_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
     now = datetime.now()
 
-    if 'user_id' in session and now > appointment_datetime - timedelta(hours=1):
-        conn.close()
-        return jsonify({'success': False, 'message': 'Non puoi cancellare meno di un’ora prima.'}), 403
+    # CLIENTE: controllo autorizzazione e orario limite
+    if 'user_id' in session:
+        if session['user_id'] != user_id:
+            conn.close()
+            return '', 403
+        if now > appointment_datetime - timedelta(hours=1):
+            conn.close()
+            return '', 403
 
-    if 'admin' in session:
+    # ADMIN: può cancellare sempre
+    if 'admin' in session or 'user_id' in session:
         cursor.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
-    else:
-        cursor.execute("DELETE FROM appointments WHERE id = ? AND user_id = ?", (appointment_id, session['user_id']))
+        conn.commit()
+        conn.close()
+        return '', 204
 
-    conn.commit()
     conn.close()
-    return jsonify({'success': True})
+    return '', 403
+
+
+
 
 @app.route('/delete_all_appointments', methods=['POST'])
 def delete_all_appointments():
