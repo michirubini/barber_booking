@@ -276,7 +276,8 @@ def admin_get_day_slots():
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT users.name, users.phone, appointments.service, appointments.time
+        SELECT users.name, users.phone, appointments.service, appointments.time, appointments.id
+
         FROM appointments
         JOIN users ON users.id = appointments.user_id
         WHERE appointments.date = ?
@@ -292,9 +293,9 @@ def admin_get_day_slots():
     ]
 
     slots = {t: [] for t in times}
-    for name, phone, servizio, time in records:
+    for name, phone, servizio, time, app_id in records:
         if time in slots:
-            slots[time].append({'name': name, 'phone': phone, 'servizio': servizio})
+            slots[time].append({'name': name, 'phone': phone, 'servizio': servizio, 'id': app_id})
     return jsonify({'slots': slots})
 
 @app.route('/account', methods=['GET', 'POST'])
