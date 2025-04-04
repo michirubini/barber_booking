@@ -294,11 +294,15 @@ def admin_get_day_slots():
     if not date:
         return jsonify({'error': 'Data mancante'}), 400
 
+    # 🔒 Blocca lunedì e domenica
+    weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+    if weekday == 0 or weekday == 6:
+        return jsonify({'slots': {}})  # Nessuno slot disponibile
+
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
     cursor.execute("""
         SELECT users.name, users.phone, appointments.service, appointments.time, appointments.id
-
         FROM appointments
         JOIN users ON users.id = appointments.user_id
         WHERE appointments.date = ?
@@ -317,7 +321,9 @@ def admin_get_day_slots():
     for name, phone, servizio, time, app_id in records:
         if time in slots:
             slots[time].append({'name': name, 'phone': phone, 'servizio': servizio, 'id': app_id})
+
     return jsonify({'slots': slots})
+
 
 @app.route('/account', methods=['GET', 'POST'])
 def account():
