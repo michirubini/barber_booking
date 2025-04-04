@@ -152,14 +152,31 @@ def book():
 
         try:
             date_obj = datetime.strptime(date, "%Y-%m-%d")
+            time_obj = datetime.strptime(time, "%H:%M").time()
+            now = datetime.now()
+
+            # 📅 Blocco date passate
+            if date_obj.date() < now.date():
+                return render_template('book.html', error="Non puoi prenotare in una data passata.")
+
+            # ⏰ Se oggi, controlla che manchi almeno 1 ora
+            if date_obj.date() == now.date():
+                appointment_datetime = datetime.combine(date_obj.date(), time_obj)
+                if appointment_datetime < now + timedelta(hours=1):
+                    return render_template('book.html', error="Devi prenotare almeno un'ora prima.")
+
+            # 📆 Solo martedì-sabato
             weekday = date_obj.weekday()
             if weekday < 1 or weekday > 5:
                 return render_template('book.html', error="Prenotabile solo da martedì a sabato.")
+
+            # 🕒 Sabato solo fino alle 15:00
             if weekday == 5 and time > '15:00':
                 return render_template('book.html', error="Sabato solo fino alle 15:00.")
         except:
             return render_template('book.html', error="Data non valida.")
 
+        # ⛔ Orario già pieno (2 prenotazioni max)
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM appointments WHERE date = ? AND time = ?", (date, time))
@@ -167,6 +184,7 @@ def book():
             conn.close()
             return render_template('book.html', error="Orario già pieno.")
 
+        # ✅ Inserisci appuntamento
         cursor.execute("INSERT INTO appointments (user_id, service, date, time) VALUES (?, ?, ?, ?)",
                        (user_id, service, date, time))
         conn.commit()
@@ -174,6 +192,7 @@ def book():
         return redirect(url_for('user_dashboard'))
 
     return render_template('book.html')
+
 
 @app.route('/edit_appointment/<int:appointment_id>', methods=['GET', 'POST'])
 def edit_appointment(appointment_id):
