@@ -295,13 +295,37 @@ def delete_all_appointments():
 def get_booked_times():
     data = request.get_json()
     date = data.get('date')
+
+    now = datetime.now()
+    is_today = date == now.strftime("%Y-%m-%d")
+
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
     cursor.execute("SELECT time, COUNT(*) FROM appointments WHERE date = ? GROUP BY time", (date,))
     time_counts = cursor.fetchall()
     conn.close()
+
     fully_booked = [row[0] for row in time_counts if row[1] >= 2]
-    return jsonify({'booked_times': fully_booked})
+    less_than_one_hour = []
+
+    if is_today:
+        all_times = [
+            '09:00','09:30','10:00','10:30','11:00','11:30',
+            '12:00','12:30','13:00','13:30','14:00','14:30',
+            '15:00','15:30','16:00','16:30','17:00','17:30',
+            '18:00','18:30','19:00'
+        ]
+
+        for t in all_times:
+            slot_time = datetime.strptime(f"{date} {t}", "%Y-%m-%d %H:%M")
+            if slot_time < now + timedelta(hours=1):
+                less_than_one_hour.append(t)
+
+    return jsonify({
+        'booked_times': fully_booked,
+        'not_available_today': less_than_one_hour
+    })
+
 
 @app.route('/admin_get_day_slots', methods=['POST'])
 def admin_get_day_slots():
