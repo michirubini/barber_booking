@@ -4,8 +4,8 @@ import sqlite3
 conn = sqlite3.connect('bookings.db')
 cursor = conn.cursor()
 
+# Aggiunta colonne alla tabella users se non esistono
 try:
-    # Aggiungo le colonne SOLO se non esistono (se lanci 2 volte, va in errore ma la prima va a buon fine)
     cursor.execute("ALTER TABLE users ADD COLUMN name TEXT NOT NULL DEFAULT 'NOME'")
     print("[OK] Colonna 'name' aggiunta")
 except sqlite3.OperationalError:
@@ -22,6 +22,13 @@ try:
     print("[OK] Colonna 'phone' aggiunta")
 except sqlite3.OperationalError:
     print("[INFO] La colonna 'phone' esiste già")
+
+# Aggiunta colonna 'barber' nella tabella appointments
+try:
+    cursor.execute("ALTER TABLE appointments ADD COLUMN barber TEXT DEFAULT 'Mattia'")
+    print("[OK] Colonna 'barber' aggiunta alla tabella appointments")
+except sqlite3.OperationalError:
+    print("[INFO] La colonna 'barber' esiste già nella tabella appointments")
 
 conn.commit()
 conn.close()

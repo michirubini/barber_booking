@@ -337,15 +337,10 @@ def admin_get_day_slots():
     if not date:
         return jsonify({'error': 'Data mancante'}), 400
 
-    # 🔒 Blocca lunedì e domenica
-    weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
-    if weekday == 0 or weekday == 6:
-        return jsonify({'slots': {}})  # Nessuno slot disponibile
-
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT users.name, users.phone, appointments.service, appointments.time, appointments.id
+        SELECT users.name, users.phone, appointments.service, appointments.time, appointments.id, appointments.barber
         FROM appointments
         JOIN users ON users.id = appointments.user_id
         WHERE appointments.date = ?
@@ -361,12 +356,17 @@ def admin_get_day_slots():
     ]
 
     slots = {t: [] for t in times}
-    for name, phone, servizio, time, app_id in records:
+    for name, phone, servizio, time, app_id, barber in records:
         if time in slots:
-            slots[time].append({'name': name, 'phone': phone, 'servizio': servizio, 'id': app_id})
+            slots[time].append({
+                'name': name,
+                'phone': phone,
+                'servizio': servizio,
+                'id': app_id,
+                'barber': barber
+            })
 
     return jsonify({'slots': slots})
-
 
 @app.route('/account', methods=['GET', 'POST'])
 def account():
@@ -558,6 +558,7 @@ def export_history_csv():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
 @app.route('/admin_book', methods=['GET', 'POST'])
 def admin_book():
     if 'admin' not in session:
@@ -567,42 +568,61 @@ def admin_book():
     time = request.args.get('time')
 
     if request.method == 'POST':
-        name = request.form['name']
-        surname = request.form['surname']
-        phone = request.form['phone']
+        name = request.form['name'].strip()
+        surname = request.form['surname'].strip()
+        phone = request.form['phone'].strip()
         service = request.form['service']
         date = request.form['date']
         time = request.form['time']
+        barber = request.form['barber']
 
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
 
-        # cerca utente esistente
-        cursor.execute("SELECT id FROM users WHERE phone = ?", (phone,))
-        user = cursor.fetchone()
+        user = None
 
+        # 🔍 Se il numero è stato inserito, cerca l'utente
+        if phone:
+            cursor.execute("SELECT id FROM users WHERE phone = ?", (phone,))
+            user = cursor.fetchone()
+
+        # 👤 Se non esiste, crea nuovo utente con username univoco
         if not user:
-            username = f"{name.lower()}.{surname.lower()}"[:20]
-            cursor.execute("INSERT INTO users (username, password, name, surname, phone) VALUES (?, ?, ?, ?, ?)",
-                           (username, 'admin-creato', name, surname, phone))
+            base_username = f"{name.lower()}.{surname.lower()}"[:20]
+            username = base_username
+            suffix = 1
+
+            cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+            while cursor.fetchone():
+                username = f"{base_username}{suffix}"
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+                suffix += 1
+
+            cursor.execute("""
+                INSERT INTO users (username, password, name, surname, phone)
+                VALUES (?, ?, ?, ?, ?)
+            """, (username, 'admin-creato', name, surname, phone if phone else "ND"))
             user_id = cursor.lastrowid
         else:
             user_id = user[0]
 
-        # controllo slot
+        # ⛔️ Controllo: massimo 2 appuntamenti nello stesso slot
         cursor.execute("SELECT COUNT(*) FROM appointments WHERE date = ? AND time = ?", (date, time))
         if cursor.fetchone()[0] >= 2:
             conn.close()
             return render_template("admin_book.html", date=date, time=time, error="Slot già pieno")
 
-        cursor.execute("INSERT INTO appointments (user_id, service, date, time) VALUES (?, ?, ?, ?)",
-                       (user_id, service, date, time))
+        # ✅ Inserimento appuntamento
+        cursor.execute("""
+            INSERT INTO appointments (user_id, service, date, time, barber)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, service, date, time, barber))
+
         conn.commit()
         conn.close()
         return redirect(url_for('admin_dashboard'))
 
     return render_template("admin_book.html", date=date, time=time)
-
 
 if __name__ == '__main__':
     app.run(debug=True)

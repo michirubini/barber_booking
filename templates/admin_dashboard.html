@@ -127,7 +127,6 @@
       <a href="{{ url_for('admin_history') }}">
         <button>📜 Storico Appuntamenti</button>
       </a>
-      
     </div>
 
     <div id="list-view" class="list-view active-view">
@@ -162,7 +161,8 @@
                   <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
                     <button class="big-btn">Modifica</button>
                   </a>
-                  <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}">Elimina</button>
+                  <button class="delete-appointment admin big-btn" data-id="{{ appointment[0] }}">Elimina</button>
+
                 </td>
               </tr>
             {% endfor %}
@@ -193,8 +193,6 @@
     <a href="{{ url_for('admin_stats') }}">
       <button class="big-btn">📊 Statistiche</button>
     </a>
-    
-
     <a href="{{ url_for('logout') }}"><button class="logout-btn">Logout</button></a>
     <a href="{{ url_for('index') }}">Torna alla Home</a>
   </div>
@@ -257,16 +255,17 @@
         calendarEl.appendChild(div);
       }
     }
+
     function loadDaySlots(dateStr) {
       const container = document.getElementById("admin-slots");
       container.innerHTML = 'Caricamento...';
+
       fetch('/admin_get_day_slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // AGGIUNGI QUESTO
+        credentials: 'include',
         body: JSON.stringify({ date: dateStr })
       })
-      
       .then(res => res.json())
       .then(data => {
         container.innerHTML = '';
@@ -286,7 +285,8 @@
             if (prenotazioni[i]) {
               entry.classList.add('booked');
               entry.innerHTML = `
-                ${prenotazioni[i].name} (${prenotazioni[i].phone}) – ${prenotazioni[i].servizio}
+                ${prenotazioni[i].name} (${prenotazioni[i].phone})<br>
+                💈 <strong>${prenotazioni[i].barber}</strong> – ${prenotazioni[i].servizio}<br>
                 <a href="/edit_appointment/${prenotazioni[i].id}">✏️</a>
                 <button class="admin-delete-appointment" data-id="${prenotazioni[i].id}">🗑️</button>
               `;
@@ -296,7 +296,6 @@
             }
             div.appendChild(entry);
           }
-
           container.appendChild(div);
         }
       });
@@ -311,7 +310,6 @@
       currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
       renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
     }
-
 
     renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
   </script>
