@@ -126,7 +126,6 @@ def admin_dashboard():
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
     today = datetime.now().strftime("%Y-%m-%d")
-    cursor.execute("DELETE FROM appointments WHERE date < ?", (today,))
     conn.commit()
     cursor.execute("""
         SELECT appointments.id, users.username, users.name, users.surname, users.phone,
@@ -354,6 +353,26 @@ def account():
     user = cursor.fetchone()
     conn.close()
     return render_template('account.html', user=user)
+@app.route('/admin_history')
+def admin_history():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT appointments.id, users.username, users.name, users.surname, users.phone,
+               appointments.service, appointments.date, appointments.time 
+        FROM appointments 
+        JOIN users ON appointments.user_id = users.id
+        WHERE appointments.date < ?
+        ORDER BY DATE(appointments.date) DESC, TIME(appointments.time) DESC
+    """, (today,))
+    history = cursor.fetchall()
+    conn.close()
+    return render_template('admin_history.html', appointments=history)
+
 
 @app.route('/logout')
 def logout():

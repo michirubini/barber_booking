@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Storico Appuntamenti</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .container {
+      max-width: 1400px;
+      margin: auto;
+      padding: 20px;
+    }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h2>Storico Appuntamenti</h2>
+    <a href="{{ url_for('admin_dashboard') }}"><button class="big-btn">🔙 Torna alla Dashboard</button></a>
+
+    {% if appointments %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Nome</th>
+            <th>Cognome</th>
+            <th>Telefono</th>
+            <th>Servizio</th>
+            <th>Data</th>
+            <th>Orario</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for appointment in appointments %}
+            <tr>
+              <td>{{ appointment[0] }}</td>
+              <td>{{ appointment[1] }}</td>
+              <td>{{ appointment[2] }}</td>
+              <td>{{ appointment[3] }}</td>
+              <td>{{ appointment[4] }}</td>
+              <td>{{ appointment[5] }}</td>
+              <td>{{ appointment[6] }}</td>
+              <td>{{ appointment[7] }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Nessun appuntamento passato trovato.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
