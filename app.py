@@ -384,12 +384,20 @@ def admin_get_day_slots():
     records = cursor.fetchall()
     conn.close()
 
-    times = [
+    all_times = [
         '09:00','09:30','10:00','10:30','11:00','11:30',
         '12:00','12:30','13:00','13:30','14:00','14:30',
         '15:00','15:30','16:00','16:30','17:00','17:30',
         '18:00','18:30','19:00'
     ]
+
+    weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+
+    # Sabato: solo fino alle 15:00
+    if weekday == 5:
+        times = [t for t in all_times if t <= '15:00']
+    else:
+        times = all_times
 
     slots = {t: [] for t in times}
     for name, phone, servizio, time, app_id, barber in records:
