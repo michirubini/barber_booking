@@ -148,6 +148,7 @@ def book():
         service = request.form['service']
         date = request.form['date']
         time = request.form['time']
+        preferred_barber = request.form.get('barber', '')
         user_id = session['user_id']
 
         try:
@@ -174,25 +175,51 @@ def book():
             if weekday == 5 and time > '15:00':
                 return render_template('book.html', error="Sabato solo fino alle 15:00.")
         except:
-            return render_template('book.html', error="Data non valida.")
+            return render_template('book.html', error="Data o orario non validi.")
 
-        # ⛔ Orario già pieno (2 prenotazioni max)
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM appointments WHERE date = ? AND time = ?", (date, time))
-        if cursor.fetchone()[0] >= 2:
+
+        # 🔍 Controlla barbieri già prenotati per quell'orario
+        cursor.execute("""
+            SELECT barber FROM appointments
+            WHERE date = ? AND time = ?
+        """, (date, time))
+        booked_barbers = [row[0] for row in cursor.fetchall()]
+
+        assigned_barber = None
+
+        # 👤 Se il cliente ha scelto una preferenza
+        if preferred_barber:
+            if preferred_barber not in booked_barbers:
+                assigned_barber = preferred_barber
+            else:
+                # Assegna l'altro se libero
+                other = 'Achille' if preferred_barber == 'Mattia' else 'Mattia'
+                if other not in booked_barbers:
+                    assigned_barber = other
+        else:
+            # 🔄 Nessuna preferenza, assegna un barbiere disponibile
+            for b in ['Mattia', 'Achille']:
+                if b not in booked_barbers:
+                    assigned_barber = b
+                    break
+
+        if not assigned_barber:
             conn.close()
             return render_template('book.html', error="Orario già pieno.")
 
-        # ✅ Inserisci appuntamento
-        cursor.execute("INSERT INTO appointments (user_id, service, date, time) VALUES (?, ?, ?, ?)",
-                       (user_id, service, date, time))
+        # ✅ Salva appuntamento
+        cursor.execute("""
+            INSERT INTO appointments (user_id, service, date, time, barber)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, service, date, time, assigned_barber))
+
         conn.commit()
         conn.close()
         return redirect(url_for('user_dashboard'))
 
     return render_template('book.html')
-
 
 @app.route('/edit_appointment/<int:appointment_id>', methods=['GET', 'POST'])
 def edit_appointment(appointment_id):
@@ -340,6 +367,11 @@ def admin_get_day_slots():
     date = data.get('date')
     if not date:
         return jsonify({'error': 'Data mancante'}), 400
+    
+    # 🔒 Blocca lunedì e domenica
+    weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+    if weekday == 0 or weekday == 6:
+        return jsonify({'slots': {}})  # Nessuno slot disponibile
 
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
