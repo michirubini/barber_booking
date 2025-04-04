@@ -353,25 +353,61 @@ def account():
     user = cursor.fetchone()
     conn.close()
     return render_template('account.html', user=user)
-@app.route('/admin_history')
+
+@app.route('/admin_history', methods=['GET', 'POST'])
 def admin_history():
     if 'admin' not in session:
         return redirect(url_for('login_admin'))
 
-    today = datetime.now().strftime("%Y-%m-%d")
-    conn = sqlite3.connect('bookings.db')
-    cursor = conn.cursor()
-    cursor.execute("""
+    filters = {
+        'start_date': '',
+        'end_date': '',
+        'service': '',
+        'search': ''
+    }
+
+    query = """
         SELECT appointments.id, users.username, users.name, users.surname, users.phone,
                appointments.service, appointments.date, appointments.time 
         FROM appointments 
         JOIN users ON appointments.user_id = users.id
-        WHERE appointments.date < ?
-        ORDER BY DATE(appointments.date) DESC, TIME(appointments.time) DESC
-    """, (today,))
-    history = cursor.fetchall()
+        WHERE appointments.date < date('now')
+    """
+    params = []
+
+    if request.method == 'POST':
+        filters['start_date'] = request.form.get('start_date', '')
+        filters['end_date'] = request.form.get('end_date', '')
+        filters['service'] = request.form.get('service', '')
+        filters['search'] = request.form.get('search', '')
+
+        if filters['start_date']:
+            query += " AND appointments.date >= ?"
+            params.append(filters['start_date'])
+
+        if filters['end_date']:
+            query += " AND appointments.date <= ?"
+            params.append(filters['end_date'])
+
+        if filters['service']:
+            query += " AND appointments.service = ?"
+            params.append(filters['service'])
+
+        if filters['search']:
+            query += " AND (users.name LIKE ? OR users.surname LIKE ? OR users.phone LIKE ?)"
+            like = f"%{filters['search']}%"
+            params.extend([like, like, like])
+
+    query += " ORDER BY DATE(appointments.date) DESC, TIME(appointments.time) DESC"
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute(query, params)
+    appointments = cursor.fetchall()
     conn.close()
-    return render_template('admin_history.html', appointments=history)
+
+    return render_template('admin_history.html', appointments=appointments, filters=filters)
+
 
 
 @app.route('/logout')

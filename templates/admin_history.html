@@ -11,11 +11,62 @@
       margin: auto;
       padding: 20px;
     }
-</style>
+
+    form.filter-form {
+      margin-bottom: 20px;
+    }
+
+    form.filter-form label {
+      margin-right: 10px;
+    }
+
+    form.filter-form input,
+    form.filter-form select {
+      margin-right: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 5px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h2>Storico Appuntamenti</h2>
+    <h2>📜 Storico Appuntamenti</h2>
+
+    <form method="POST" class="filter-form">
+      <label>Data da:</label>
+      <input type="date" name="start_date" value="{{ filters.start_date }}">
+
+      <label>a:</label>
+      <input type="date" name="end_date" value="{{ filters.end_date }}">
+
+      <label>Servizio:</label>
+      <select name="service">
+        <option value="">Tutti</option>
+        <option value="Taglio di capelli" {% if filters.service == 'Taglio di capelli' %}selected{% endif %}>Taglio di capelli</option>
+        <option value="Taglio di capelli + Barba" {% if filters.service == 'Taglio di capelli + Barba' %}selected{% endif %}>Taglio + Barba</option>
+        <option value="Solo Barba" {% if filters.service == 'Solo Barba' %}selected{% endif %}>Solo Barba</option>
+      </select>
+
+      <label>Nome / Telefono:</label>
+      <input type="text" name="search" placeholder="Mario / 333..." value="{{ filters.search }}">
+
+      <button type="submit">🔍 Cerca</button>
+      <a href="{{ url_for('admin_history') }}"><button type="button">♻️ Reset</button></a>
+    </form>
+
     <a href="{{ url_for('admin_dashboard') }}"><button class="big-btn">🔙 Torna alla Dashboard</button></a>
 
     {% if appointments %}
@@ -48,7 +99,7 @@
         </tbody>
       </table>
     {% else %}
-      <p>Nessun appuntamento passato trovato.</p>
+      <p>Nessun appuntamento trovato per i criteri selezionati.</p>
     {% endif %}
   </div>
 </body>
