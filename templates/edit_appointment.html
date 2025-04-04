@@ -25,6 +25,14 @@
         <option value="Solo Barba" {% if appointment[1] == 'Solo Barba' %} selected {% endif %}>Solo Barba</option>
       </select>
 
+      {% if 'admin' in session %}
+      <label for="barber">Barbiere:</label>
+      <select name="barber" required>
+        <option value="Mattia" {% if appointment[4] == 'Mattia' %} selected {% endif %}>Mattia</option>
+        <option value="Achille" {% if appointment[4] == 'Achille' %} selected {% endif %}>Achille</option>
+      </select>
+      {% endif %}
+
       <h3>Seleziona una Data</h3>
       <div class="calendar-controls">
         <button type="button" id="prev-month">◀</button>

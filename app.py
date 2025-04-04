@@ -229,10 +229,11 @@ def edit_appointment(appointment_id):
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
+    # Recupera anche il barbiere se sei admin
     if 'admin' in session:
-        cursor.execute("SELECT id, service, date, time FROM appointments WHERE id = ?", (appointment_id,))
+        cursor.execute("SELECT id, service, date, time, barber FROM appointments WHERE id = ?", (appointment_id,))
     else:
-        cursor.execute("SELECT id, service, date, time FROM appointments WHERE id = ? AND user_id = ?",
+        cursor.execute("SELECT id, service, date, time, barber FROM appointments WHERE id = ? AND user_id = ?",
                        (appointment_id, session['user_id']))
 
     appointment = cursor.fetchone()
@@ -259,14 +260,21 @@ def edit_appointment(appointment_id):
             return render_template("edit_appointment.html", appointment=appointment,
                                    error="Fascia oraria piena.")
 
-        cursor.execute("UPDATE appointments SET service = ?, date = ?, time = ? WHERE id = ?",
-                       (new_service, new_date, new_time, appointment_id))
+        if 'admin' in session:
+            new_barber = request.form['barber']
+            cursor.execute("UPDATE appointments SET service = ?, date = ?, time = ?, barber = ? WHERE id = ?",
+                           (new_service, new_date, new_time, new_barber, appointment_id))
+        else:
+            cursor.execute("UPDATE appointments SET service = ?, date = ?, time = ? WHERE id = ?",
+                           (new_service, new_date, new_time, appointment_id))
+
         conn.commit()
         conn.close()
         return redirect(url_for('admin_dashboard' if 'admin' in session else 'user_dashboard'))
 
     conn.close()
     return render_template('edit_appointment.html', appointment=appointment)
+
 
 @app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
 def delete_appointment(appointment_id):
