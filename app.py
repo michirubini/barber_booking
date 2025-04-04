@@ -246,39 +246,43 @@ def delete_appointment(appointment_id):
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
-    # Verifica se l'appuntamento esiste
     cursor.execute("SELECT user_id, date, time FROM appointments WHERE id = ?", (appointment_id,))
     result = cursor.fetchone()
 
     if not result:
         conn.close()
-        return '', 404
+        return jsonify({'error': 'Appuntamento non trovato'}), 404
 
     user_id, date_str, time_str = result
     appointment_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
     now = datetime.now()
 
-    # CLIENTE: controllo autorizzazione e orario limite
+    # SE ADMIN: bypassa tutti i controlli
+    if 'admin' in session:
+        cursor.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
+        conn.commit()
+        conn.close()
+        return '', 204
+
+    # SE UTENTE LOGGATO: controlli di sicurezza
     if 'user_id' in session:
         if session['user_id'] != user_id:
             conn.close()
-            return '', 403
+            return jsonify({'error': 'Non sei autorizzato'}), 403
+        if now > appointment_datetime:
+            conn.close()
+            return jsonify({'error': 'Appuntamento già passato'}), 403
         if now > appointment_datetime - timedelta(hours=1):
             conn.close()
-            return '', 403
+            return jsonify({'error': 'Meno di un\'ora all\'appuntamento'}), 403
 
-    # ADMIN: può cancellare sempre
-    if 'admin' in session or 'user_id' in session:
         cursor.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
         conn.commit()
         conn.close()
         return '', 204
 
     conn.close()
-    return '', 403
-
-
-
+    return jsonify({'error': 'Non autorizzato'}), 403
 
 @app.route('/delete_all_appointments', methods=['POST'])
 def delete_all_appointments():
