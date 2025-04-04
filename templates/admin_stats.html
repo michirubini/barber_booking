@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Statistiche Appuntamenti</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📊 Statistiche Appuntamenti</h2>
+
+    <a href="{{ url_for('admin_dashboard') }}">
+      <button class="big-btn">🔙 Torna alla Dashboard</button>
+    </a>
+
+    <h3>Appuntamenti per Giorno</h3>
+    <canvas id="dailyChart"></canvas>
+
+    <h3>Appuntamenti per Mese</h3>
+    <canvas id="monthlyChart"></canvas>
+  </div>
+
+  <script>
+    // Dati giornalieri
+    const dailyLabels = {{ daily_data | map(attribute=0) | list | tojson }};
+    const dailyCounts = {{ daily_data | map(attribute=1) | list | tojson }};
+
+    const ctxDay = document.getElementById('dailyChart').getContext('2d');
+    new Chart(ctxDay, {
+      type: 'bar',
+      data: {
+        labels: dailyLabels,
+        datasets: [{
+          label: 'Appuntamenti per Giorno',
+          data: dailyCounts
+        }]
+      }
+    });
+
+    // Dati mensili
+    const monthlyLabels = {{ monthly_data | map(attribute=0) | list | tojson }};
+    const monthlyCounts = {{ monthly_data | map(attribute=1) | list | tojson }};
+
+    const ctxMonth = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(ctxMonth, {
+      type: 'bar',
+      data: {
+        labels: monthlyLabels,
+        datasets: [{
+          label: 'Appuntamenti per Mese',
+          data: monthlyCounts
+        }]
+      }
+    });
+  </script>
+</body>
+</html>

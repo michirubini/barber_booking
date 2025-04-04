@@ -190,6 +190,10 @@
     <form action="{{ url_for('delete_all_appointments') }}" method="post" onsubmit="return confirm('Sei sicuro di voler eliminare tutti gli appuntamenti?');">
       <button type="submit" class="big-btn" style="background-color: darkred;">Elimina Tutti gli Appuntamenti</button>
     </form>
+    <a href="{{ url_for('admin_stats') }}">
+      <button class="big-btn">📊 Statistiche</button>
+    </a>
+    
 
     <a href="{{ url_for('logout') }}"><button class="logout-btn">Logout</button></a>
     <a href="{{ url_for('index') }}">Torna alla Home</a>

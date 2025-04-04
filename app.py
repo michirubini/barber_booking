@@ -408,7 +408,102 @@ def admin_history():
 
     return render_template('admin_history.html', appointments=appointments, filters=filters)
 
+@app.route('/admin_stats')
+def admin_stats():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
 
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+
+    # Appuntamenti per giorno
+    cursor.execute("""
+        SELECT date, COUNT(*) 
+        FROM appointments 
+        GROUP BY date 
+        ORDER BY date
+    """)
+    daily_data = cursor.fetchall()
+
+    # Appuntamenti per mese (yyyy-mm)
+    cursor.execute("""
+        SELECT SUBSTR(date, 1, 7) as month, COUNT(*)
+        FROM appointments
+        GROUP BY month
+        ORDER BY month
+    """)
+    monthly_data = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        'admin_stats.html',
+        daily_data=daily_data,
+        monthly_data=monthly_data
+    )
+
+@app.route('/admin_history/export', methods=['POST'])
+def export_history_csv():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    query = """
+        SELECT appointments.id, users.username, users.name, users.surname, users.phone,
+               appointments.service, appointments.date, appointments.time 
+        FROM appointments 
+        JOIN users ON appointments.user_id = users.id
+        WHERE appointments.date < date('now')
+    """
+    params = []
+
+    # Recupera filtri dal form
+    start_date = request.form.get('start_date', '')
+    end_date = request.form.get('end_date', '')
+    service = request.form.get('service', '')
+    search = request.form.get('search', '')
+
+    if start_date:
+        query += " AND appointments.date >= ?"
+        params.append(start_date)
+
+    if end_date:
+        query += " AND appointments.date <= ?"
+        params.append(end_date)
+
+    if service:
+        query += " AND appointments.service = ?"
+        params.append(service)
+
+    if search:
+        query += " AND (users.name LIKE ? OR users.surname LIKE ? OR users.phone LIKE ?)"
+        like = f"%{search}%"
+        params.extend([like, like, like])
+
+    query += " ORDER BY DATE(appointments.date) DESC, TIME(appointments.time) DESC"
+
+    # Esegui query
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Genera CSV
+    import csv
+    from io import StringIO
+    from flask import make_response
+
+    si = StringIO()
+    writer = csv.writer(si)
+    writer.writerow(['ID', 'Username', 'Nome', 'Cognome', 'Telefono', 'Servizio', 'Data', 'Ora'])
+
+    for row in rows:
+        writer.writerow(row)
+
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=storico_appuntamenti.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 @app.route('/logout')
 def logout():
