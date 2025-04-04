@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // === UTENTE o ADMIN ===
+  // === UTENTE o ADMIN (lista appuntamenti) ===
   document.addEventListener('click', function (e) {
     if (e.target.classList.contains('delete-appointment')) {
       const id = e.target.dataset.id;
@@ -9,17 +9,15 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (confirm('Sei sicuro di voler eliminare questo appuntamento?')) {
-        const url = e.target.classList.contains('admin') 
-          ? `/admin_delete_appointment/${id}` 
-          : `/delete_appointment/${id}`;
-
-        fetch(url, {
+        fetch(`/delete_appointment/${id}`, {
           method: 'POST',
           credentials: 'include'
         })
         .then(res => {
           if (res.ok) {
             location.reload();
+          } else if (res.status === 403) {
+            alert("❌ Non puoi cancellare un appuntamento passato.");
           } else {
             alert(`Errore durante l'eliminazione. Codice: ${res.status}`);
           }
@@ -29,8 +27,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
       }
     }
+  });
 
-    // === ADMIN (cestino nella vista calendario) ===
+  // === ADMIN (cestino nella vista calendario) ===
+  document.addEventListener('click', function (e) {
     if (e.target.classList.contains('admin-delete-appointment')) {
       const id = e.target.dataset.id;
       if (!id) {
