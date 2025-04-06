@@ -82,6 +82,89 @@ def login_user():
             return render_template('login_user.html', error="Credenziali non valide")
     return render_template('login_user.html')
 
+@app.route('/admin_users')
+def admin_users():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, surname, phone, email, username FROM users ORDER BY id DESC")
+    users = cursor.fetchall()
+    conn.close()
+    
+    return render_template('admin_users.html', users=users)
+
+@app.route('/admin_edit_user/<int:user_id>', methods=['GET', 'POST'])
+def admin_edit_user(user_id):
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        surname = request.form['surname']
+        phone = request.form['phone']
+        email = request.form['email']
+        username = request.form['username']
+        password = request.form['password']
+
+        # Controlli duplicati
+        cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, user_id))
+        if cursor.fetchone():
+            conn.close()
+            return render_template('admin_edit_user.html', user=(name, surname, phone, email, username, password),
+                                   error="Username già in uso")
+
+        cursor.execute("SELECT id FROM users WHERE email = ? AND id != ?", (email, user_id))
+        if cursor.fetchone():
+            conn.close()
+            return render_template('admin_edit_user.html', user=(name, surname, phone, email, username, password),
+                                   error="Email già registrata")
+
+        # Salva modifiche
+        cursor.execute("""
+            UPDATE users 
+            SET name = ?, surname = ?, phone = ?, email = ?, username = ?, password = ?
+            WHERE id = ?
+        """, (name, surname, phone, email, username, password, user_id))
+
+        conn.commit()
+        conn.close()
+        return redirect(url_for('admin_users'))
+
+    # Carica dati utente
+    cursor.execute("SELECT name, surname, phone, email, username, password FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        return redirect(url_for('admin_users'))
+
+    return render_template('admin_edit_user.html', user=user)
+
+
+@app.route('/admin_delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+
+    # ⚠️ Prima elimina i suoi appuntamenti
+    cursor.execute("DELETE FROM appointments WHERE user_id = ?", (user_id,))
+    # Poi elimina l'utente
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin_users'))
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':

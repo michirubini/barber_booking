@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Utenti</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      background-color: #f7f7f7;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1200px;
+      padding: 2rem;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table th, table td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #ccc;
+    }
+
+    table th {
+      background-color: #d8c1a7;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <h2>Utenti Registrati</h2>
+
+      {% if users %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Cognome</th>
+            <th>Telefono</th>
+            <th>Email</th>
+            <th>Username</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td>{{ user[0] }}</td>
+            <td>{{ user[1] }}</td>
+            <td>{{ user[2] }}</td>
+            <td>{{ user[3] }}</td>
+            <td>{{ user[4] or 'ND' }}</td>
+            <td>{{ user[5] }}</td>
+            <td>
+              <a href="{{ url_for('admin_edit_user', user_id=user[0]) }}" title="Modifica">
+                <button class="big-btn">Modifica</button>
+              </a>
+              <form method="post" action="{{ url_for('delete_user', user_id=user[0]) }}" style="display:inline-block">
+                <button type="submit" class="delete-btn" onclick="return confirm('Confermi eliminazione utente?')">Elimina</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <p>Nessun utente registrato.</p>
+      {% endif %}
+
+      <br>
+      <a href="{{ url_for('admin_dashboard') }}">&larr; Torna alla Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>
+
+
