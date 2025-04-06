@@ -184,6 +184,46 @@ def delete_user(user_id):
 
     return redirect(url_for('admin_users'))
 
+# ---------- ALTRE FUNZIONI UTILI ----------
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+def invia_email_registrazione(destinatario, nome, cognome, username, telefono):
+    mittente = 'rubinimc@gmail.com'
+    password = 'mtgk jhxz wagn wicg'
+
+    oggetto = "Benvenuto nel nostro sistema!"
+    messaggio = f"""
+    Ciao {nome} {cognome},
+
+    Grazie per esserti registrato!
+    Ecco i tuoi dati:
+
+    • Username: {username}
+    • Telefono: {telefono}
+    • Email: {destinatario}
+
+    A presto!
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = mittente
+    msg['To'] = destinatario
+    msg['Subject'] = oggetto
+    msg.attach(MIMEText(messaggio, 'plain'))
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(mittente, password)
+        server.send_message(msg)
+        server.quit()
+        print("📨 Email inviata con successo!")
+    except Exception as e:
+        print("❌ Errore nell'invio dell'email:", e)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -218,10 +258,13 @@ def register():
 
         conn.commit()
         conn.close()
+
+        # ✅ Invio email di conferma registrazione
+        invia_email_registrazione(email, name, surname, username, phone)
+
         return redirect(url_for('login_user'))
 
     return render_template('register.html')
-
 
 @app.route('/user_dashboard')
 def user_dashboard():
