@@ -52,15 +52,21 @@
       background-color: #e8d8c3;
     }
 
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
     .big-btn, .delete-btn {
-      padding: 6px 12px;
-      font-size: 0.85rem;
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 1rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       color: #fff;
       background-color: #a6794e;
-      margin: 2px 0;
     }
 
     .delete-btn {
@@ -102,12 +108,14 @@
             <td>{{ user[4] or 'ND' }}</td>
             <td>{{ user[5] }}</td>
             <td>
-              <a href="{{ url_for('admin_edit_user', user_id=user[0]) }}" title="Modifica">
-                <button class="big-btn">Modifica</button>
-              </a>
-              <form method="post" action="{{ url_for('delete_user', user_id=user[0]) }}" style="display:inline-block">
-                <button type="submit" class="delete-btn" onclick="return confirm('Confermi eliminazione utente?')">Elimina</button>
-              </form>
+              <div class="actions">
+                <a href="{{ url_for('admin_edit_user', user_id=user[0]) }}" title="Modifica">
+                  <button class="big-btn">Modifica</button>
+                </a>
+                <form method="post" action="{{ url_for('delete_user', user_id=user[0]) }}">
+                  <button type="submit" class="delete-btn" onclick="return confirm('Confermi eliminazione utente?')">Elimina</button>
+                </form>
+              </div>
             </td>
           </tr>
           {% endfor %}
@@ -121,4 +129,3 @@
   </div>
 </body>
 </html>
-
