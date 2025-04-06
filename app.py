@@ -95,6 +95,26 @@ def admin_users():
     
     return render_template('admin_users.html', users=users)
 
+@app.route('/admin_delete_selected_users', methods=['POST'])
+def delete_selected_users():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    selected_ids = request.form.getlist('selected_users')
+    if selected_ids:
+        conn = sqlite3.connect('bookings.db')
+        cursor = conn.cursor()
+
+        # Prima cancella gli appuntamenti legati
+        cursor.executemany("DELETE FROM appointments WHERE user_id = ?", [(uid,) for uid in selected_ids])
+        # Poi elimina gli utenti
+        cursor.executemany("DELETE FROM users WHERE id = ?", [(uid,) for uid in selected_ids])
+
+        conn.commit()
+        conn.close()
+
+    return redirect(url_for('admin_users'))
+
 @app.route('/admin_edit_user/<int:user_id>', methods=['GET', 'POST'])
 def admin_edit_user(user_id):
     if 'admin' not in session:

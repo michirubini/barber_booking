@@ -92,6 +92,12 @@
     .big-btn:hover {
       opacity: 0.9;
     }
+
+    .bulk-delete {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+    }
   </style>
 </head>
 <body>
@@ -101,47 +107,60 @@
       <a class="dashboard-link" href="{{ url_for('admin_dashboard') }}">&larr; Torna alla Dashboard</a>
 
       {% if users %}
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Cognome</th>
-            <th>Telefono</th>
-            <th>Email</th>
-            <th>Username</th>
-            <th>Azioni</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in users %}
-          <tr>
-            <td>{{ user[0] }}</td>
-            <td>{{ user[1] }}</td>
-            <td>{{ user[2] }}</td>
-            <td>{{ user[3] }}</td>
-            <td>{{ user[4] or 'ND' }}</td>
-            <td>{{ user[5] }}</td>
-            <td>
-              <div class="actions">
-                <a href="{{ url_for('admin_edit_user', user_id=user[0]) }}" title="Modifica">
-                  <button class="big-btn">Modifica</button>
-                </a>
-                <form method="post" action="{{ url_for('delete_user', user_id=user[0]) }}">
-                  <button type="submit" class="delete-btn" onclick="return confirm('Confermi eliminazione utente?')">Elimina</button>
-                </form>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <form method="post" action="{{ url_for('delete_selected_users') }}">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="select-all"></th>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Cognome</th>
+              <th>Telefono</th>
+              <th>Email</th>
+              <th>Username</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td><input type="checkbox" name="selected_users" value="{{ user[0] }}"></td>
+              <td>{{ user[0] }}</td>
+              <td>{{ user[1] }}</td>
+              <td>{{ user[2] }}</td>
+              <td>{{ user[3] }}</td>
+              <td>{{ user[4] or 'ND' }}</td>
+              <td>{{ user[5] }}</td>
+              <td>
+                <div class="actions">
+                  <a href="{{ url_for('admin_edit_user', user_id=user[0]) }}" title="Modifica">
+                    <button class="big-btn" type="button">Modifica</button>
+                  </a>
+                  <form method="post" action="{{ url_for('delete_user', user_id=user[0]) }}">
+                    <button type="submit" class="delete-btn" onclick="return confirm('Confermi eliminazione utente?')">Elimina</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="bulk-delete">
+          <button type="submit" class="delete-btn" onclick="return confirm('Eliminare tutti gli utenti selezionati?')">Elimina Selezionati</button>
+        </div>
+      </form>
       {% else %}
         <p>Nessun utente registrato.</p>
       {% endif %}
-
     </div>
   </div>
+
+  <script>
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('input[name="selected_users"]');
+    selectAll.addEventListener('change', function () {
+      checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    });
+  </script>
 </body>
 </html>
-
