@@ -419,18 +419,19 @@ def edit_appointment(appointment_id):
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
-    # Recupera anche il barbiere se sei admin
+    # Carica appuntamento
     if 'admin' in session:
         cursor.execute("SELECT id, service, date, time, barber FROM appointments WHERE id = ?", (appointment_id,))
     else:
         cursor.execute("SELECT id, service, date, time, barber FROM appointments WHERE id = ? AND user_id = ?",
                        (appointment_id, session['user_id']))
-
+    
     appointment = cursor.fetchone()
     if not appointment:
         conn.close()
         return redirect(url_for('admin_dashboard' if 'admin' in session else 'user_dashboard'))
 
+    # Blocco modifica troppo vicina per l'utente
     if 'user_id' in session:
         appointment_datetime = datetime.strptime(f"{appointment[2]} {appointment[3]}", "%Y-%m-%d %H:%M")
         if datetime.now() > appointment_datetime - timedelta(hours=1):
@@ -443,6 +444,7 @@ def edit_appointment(appointment_id):
         new_date = request.form['date']
         new_time = request.form['time']
 
+        # Controllo se lo slot è pieno
         cursor.execute("SELECT COUNT(*) FROM appointments WHERE date = ? AND time = ? AND id != ?",
                        (new_date, new_time, appointment_id))
         if cursor.fetchone()[0] >= 2:
@@ -450,6 +452,7 @@ def edit_appointment(appointment_id):
             return render_template("edit_appointment.html", appointment=appointment,
                                    error="Fascia oraria piena.")
 
+        # Se admin, aggiorna anche il barbiere
         if 'admin' in session:
             new_barber = request.form['barber']
             cursor.execute("UPDATE appointments SET service = ?, date = ?, time = ?, barber = ? WHERE id = ?",
@@ -460,10 +463,13 @@ def edit_appointment(appointment_id):
 
         conn.commit()
         conn.close()
-        return redirect(url_for('admin_dashboard' if 'admin' in session else 'user_dashboard'))
+
+        # Redirect corretto
+        return redirect(url_for('user_dashboard') if 'user_id' in session else 'admin_dashboard')
 
     conn.close()
     return render_template('edit_appointment.html', appointment=appointment)
+
 
 
 @app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
