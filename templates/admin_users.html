@@ -82,11 +82,11 @@
     }
 
     .delete-btn {
-      background-color: #000 !important;
+      background-color: #7b2f3c !important;
     }
 
     .delete-btn:hover {
-      background-color: #333 !important;
+      background-color: #652431 !important;
     }
 
     .big-btn:hover {
@@ -94,9 +94,10 @@
     }
 
     .bulk-delete {
-      margin-top: 20px;
+      margin-top: 30px;
       display: flex;
       justify-content: flex-end;
+      display: none;
     }
   </style>
 </head>
@@ -133,11 +134,11 @@
               <td>{{ user[5] }}</td>
               <td>
                 <div class="actions">
-                  <a href="{{ url_for('admin_edit_user', user_id=user[0]) }}" title="Modifica">
+                  <a href="{{ url_for('admin_edit_user', user_id=user[0]) }}">
                     <button class="big-btn" type="button">Modifica</button>
                   </a>
-                  <form method="post" action="{{ url_for('delete_user', user_id=user[0]) }}">
-                    <button type="submit" class="delete-btn" onclick="return confirm('Confermi eliminazione utente?')">Elimina</button>
+                  <form method="post" action="{{ url_for('admin_delete_user', user_id=user[0]) }}" onsubmit="return confirm('Confermi eliminazione utente {{ user[1] }} {{ user[2] }}?')">
+                    <button type="submit" class="delete-btn">Elimina</button>
                   </form>
                 </div>
               </td>
@@ -145,7 +146,7 @@
             {% endfor %}
           </tbody>
         </table>
-        <div class="bulk-delete">
+        <div class="bulk-delete" id="bulk-delete-container">
           <button type="submit" class="delete-btn" onclick="return confirm('Eliminare tutti gli utenti selezionati?')">Elimina Selezionati</button>
         </div>
       </form>
@@ -158,9 +159,22 @@
   <script>
     const selectAll = document.getElementById('select-all');
     const checkboxes = document.querySelectorAll('input[name="selected_users"]');
-    selectAll.addEventListener('change', function () {
+    const bulkDelete = document.getElementById('bulk-delete-container');
+
+    function toggleBulkDeleteButton() {
+      const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+      bulkDelete.style.display = anyChecked ? 'flex' : 'none';
+    }
+
+    selectAll?.addEventListener('change', function () {
       checkboxes.forEach(cb => cb.checked = selectAll.checked);
+      toggleBulkDeleteButton();
+    });
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', toggleBulkDeleteButton);
     });
   </script>
 </body>
 </html>
+

@@ -257,8 +257,13 @@ th {
     padding: 8px;
     width: 100%;
   }
-  button.delete-btn {
-    background-color: #000 !important;
+  
+  .delete-btn {
+    background-color: #7b2f3c !important;
+  }
+
+  .delete-btn:hover {
+    background-color: #652431 !important;
   }
   
   h1, h2, h3 {

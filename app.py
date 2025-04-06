@@ -165,24 +165,43 @@ def admin_edit_user(user_id):
 
     return render_template('admin_edit_user.html', user=user)
 
+@app.route('/delete_account', methods=['POST'])
+def delete_account():
+    if 'user_id' not in session:
+        return redirect(url_for('login_user'))
+
+    user_id = session['user_id']
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM appointments WHERE user_id = ?", (user_id,))
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+    session.clear()
+    return redirect(url_for('index'))
+
+
 
 @app.route('/admin_delete_user/<int:user_id>', methods=['POST'])
-def delete_user(user_id):
+def admin_delete_user(user_id):
     if 'admin' not in session:
         return redirect(url_for('login_admin'))
 
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
-    # ⚠️ Prima elimina i suoi appuntamenti
     cursor.execute("DELETE FROM appointments WHERE user_id = ?", (user_id,))
-    # Poi elimina l'utente
     cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    
+
     conn.commit()
     conn.close()
 
     return redirect(url_for('admin_users'))
+
+
+
 
 # ---------- ALTRE FUNZIONI UTILI ----------
 
