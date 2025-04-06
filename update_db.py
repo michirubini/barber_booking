@@ -23,6 +23,13 @@ try:
 except sqlite3.OperationalError:
     print("[INFO] La colonna 'phone' esiste già")
 
+# Aggiunta colonna 'email' alla tabella users
+try:
+    cursor.execute("ALTER TABLE users ADD COLUMN email TEXT")
+    print("[OK] Colonna 'email' aggiunta")
+except sqlite3.OperationalError:
+    print("[INFO] La colonna 'email' esiste già")
+
 # Aggiunta colonna 'barber' nella tabella appointments
 try:
     cursor.execute("ALTER TABLE appointments ADD COLUMN barber TEXT DEFAULT 'Mattia'")

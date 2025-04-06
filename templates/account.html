@@ -17,22 +17,26 @@
         {% if user %}
         <form method="post">
             <label for="name">Nome:</label>
-            <input type="text" id="name" name="name" value="{{ user[0] }}" required>
-
+            <input type="text" name="name" value="{{ user[0] }}" required>
+          
             <label for="surname">Cognome:</label>
-            <input type="text" id="surname" name="surname" value="{{ user[1] }}" required>
-
+            <input type="text" name="surname" value="{{ user[1] }}" required>
+          
             <label for="phone">Telefono:</label>
-            <input type="text" id="phone" name="phone" value="{{ user[2] }}" required>
-
+            <input type="text" name="phone" value="{{ user[2] }}" required>
+          
+            <label for="email">Email:</label>
+            <input type="email" name="email" value="{{ user[3] }}" required> <!-- AGGIUNTO -->
+          
             <label for="username">Username:</label>
-            <input type="text" id="username" name="username" value="{{ user[3] }}" required>
-
+            <input type="text" name="username" value="{{ user[4] }}" required>
+          
             <label for="password">Password:</label>
-            <input type="text" id="password" name="password" value="{{ user[4] }}" required>
-
+            <input type="password" name="password" value="{{ user[5] }}" required>
+          
             <button type="submit" class="big-btn">Salva Modifiche</button>
-        </form>
+          </form>
+          
         {% endif %}
 
         <a href="{{ url_for('user_dashboard') }}">Torna al Dashboard</a>

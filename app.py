@@ -88,8 +88,10 @@ def register():
         name = request.form['name']
         surname = request.form['surname']
         phone = request.form['phone']
+        email = request.form['email']
         username = request.form['username']
         password = request.form['password']
+        
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
@@ -97,9 +99,10 @@ def register():
             conn.close()
             return render_template('register.html', error="Username già esistente")
         cursor.execute("""
-            INSERT INTO users (username, password, name, surname, phone)
-            VALUES (?, ?, ?, ?, ?)
-        """, (username, password, name, surname, phone))
+            INSERT INTO users (username, password, name, surname, phone, email)
+            VALUES (?, ?, ?, ?, ?, ?)
+
+        """, (username, password, name, surname, phone, email))
         conn.commit()
         conn.close()
         return redirect(url_for('login_user'))
@@ -434,27 +437,35 @@ def account():
         name = request.form['name']
         surname = request.form['surname']
         phone = request.form['phone']
+        email = request.form['email']
         username = request.form['username']
         password = request.form['password']
 
+        # Verifica che lo username non sia già usato da un altro utente
         cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, user_id))
         if cursor.fetchone():
             conn.close()
             return render_template('account.html', error="Username già in uso.", user=None)
 
+        # Aggiorna i dati dell'utente
         cursor.execute("""
-            UPDATE users SET name = ?, surname = ?, phone = ?, username = ?, password = ?
+            UPDATE users 
+            SET name = ?, surname = ?, phone = ?, email = ?, username = ?, password = ?
             WHERE id = ?
-        """, (name, surname, phone, username, password, user_id))
+        """, (name, surname, phone, email, username, password, user_id))
+        
         conn.commit()
         conn.close()
-        session['username'] = username
+        session['username'] = username  # Aggiorna anche in sessione
         return redirect(url_for('user_dashboard'))
 
-    cursor.execute("SELECT name, surname, phone, username, password FROM users WHERE id = ?", (user_id,))
+    # Carica i dati attuali dell'utente (INCLUSA email)
+    cursor.execute("SELECT name, surname, phone, email, username, password FROM users WHERE id = ?", (user_id,))
     user = cursor.fetchone()
     conn.close()
+
     return render_template('account.html', user=user)
+
 
 @app.route('/admin_history', methods=['GET', 'POST'])
 def admin_history():
