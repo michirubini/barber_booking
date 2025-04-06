@@ -32,7 +32,11 @@
             <input type="text" name="username" value="{{ user[4] }}" required>
           
             <label for="password">Password:</label>
-            <input type="password" name="password" value="{{ user[5] }}" required>
+            <div style="position: relative;">
+            <input type="password" id="password" name="password" value="{{ user[5] }}" required>
+            <span id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">👁️</span>
+            </div>
+
           
             <button type="submit" class="big-btn">Salva Modifiche</button>
           </form>
@@ -41,5 +45,16 @@
 
         <a href="{{ url_for('user_dashboard') }}">Torna al Dashboard</a>
     </div>
+  
+    <script>
+      const togglePassword = document.getElementById("togglePassword");
+      const passwordInput = document.getElementById("password");
+  
+      togglePassword.addEventListener("click", function () {
+        const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+        passwordInput.setAttribute("type", type);
+        this.textContent = type === "password" ? "👁️" : "🙈";
+      });
+    </script>  
 </body>
 </html>
