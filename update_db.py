@@ -23,10 +23,9 @@ try:
 except sqlite3.OperationalError:
     print("[INFO] La colonna 'phone' esiste già")
 
-# Aggiunta colonna 'email' alla tabella users
 try:
-    cursor.execute("ALTER TABLE users ADD COLUMN email TEXT")
-    print("[OK] Colonna 'email' aggiunta")
+    cursor.execute("ALTER TABLE users ADD COLUMN email TEXT UNIQUE")
+    print("[OK] Colonna 'email' aggiunta con vincolo UNIQUE")
 except sqlite3.OperationalError:
     print("[INFO] La colonna 'email' esiste già")
 
@@ -39,4 +38,5 @@ except sqlite3.OperationalError:
 
 conn.commit()
 conn.close()
-print("✅ Database aggiornato con successo!")
+print("\n✅ Database aggiornato con successo!")
+

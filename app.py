@@ -91,22 +91,34 @@ def register():
         email = request.form['email']
         username = request.form['username']
         password = request.form['password']
-        
+
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
+
+        # ❌ Controllo username già esistente
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         if cursor.fetchone():
             conn.close()
             return render_template('register.html', error="Username già esistente")
+
+        # ❌ Controllo email già registrata
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        if cursor.fetchone():
+            conn.close()
+            return render_template('register.html', error="Email già registrata")
+
+        # ✅ Inserimento nuovo utente
         cursor.execute("""
             INSERT INTO users (username, password, name, surname, phone, email)
             VALUES (?, ?, ?, ?, ?, ?)
-
         """, (username, password, name, surname, phone, email))
+
         conn.commit()
         conn.close()
         return redirect(url_for('login_user'))
+
     return render_template('register.html')
+
 
 @app.route('/user_dashboard')
 def user_dashboard():
