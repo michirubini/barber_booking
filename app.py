@@ -191,25 +191,30 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 def invia_email_registrazione(destinatario, nome, cognome, username, telefono, password):
-    mittente = 'rubinimc@gmail.com'  # o email del barbiere
-    password_email = 'mtgk jhxz wagn wicg'  # <-- App password Gmail
+    mittente = 'rubinimc@gmail.com'  # o la mail definitiva del salone
+    password_email = 'mtgk jhxz wagn wicg'
 
-    oggetto = "Benvenuto nella nostra Barberia!"
+    oggetto = "Benvenuto da Les Klips Hair & Barber – Registrazione completata"
     messaggio = f"""
-    Ciao {nome} {cognome},
+Ciao {nome} {cognome},
 
-    Grazie per esserti registrato nel nostro sistema!
-    Ecco i tuoi dati di accesso:
+Grazie per esserti registrato/a presso Les Klips Hair & Barber!
+Siamo felici di averti con noi.
 
-    • Username: {username}
-    • Password: {password}
-    • Telefono: {telefono}
-    • Email: {destinatario}
+Ecco i tuoi dati di accesso personali:
 
-    Ti aspettiamo per il tuo prossimo appuntamento 💈
+• Username: {username}
+• Password: {password}
+• Email: {destinatario}
+• Telefono: {telefono}
 
-    Barberia XYZ
-    """
+Potrai ora prenotare facilmente i tuoi appuntamenti direttamente online.
+
+Per qualsiasi informazione o richiesta, siamo a tua disposizione.
+
+A presto,  
+Il team Les Klips Hair & Barber
+"""
 
     msg = MIMEMultipart()
     msg['From'] = mittente
@@ -226,7 +231,6 @@ def invia_email_registrazione(destinatario, nome, cognome, username, telefono, p
         print("📨 Email inviata con successo!")
     except Exception as e:
         print("❌ Errore nell'invio dell'email:", e)
-
 
 
 @app.route('/register', methods=['GET', 'POST'])
