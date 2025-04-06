@@ -6,6 +6,13 @@
   <title>Gestione Utenti</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
+
+.container {
+      max-width: 1400px;
+      margin: auto;
+      padding: 20px;
+    }
+    
     body {
       margin: 0;
       padding: 0;
@@ -13,12 +20,12 @@
       justify-content: center;
       align-items: flex-start;
       min-height: 100vh;
-      background-color: #f7f7f7;
+      background-color: #fdf6ee;
     }
 
     .page {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1400px;
       padding: 2rem;
     }
 
@@ -29,26 +36,55 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     }
 
+    .top-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      font-size: 0.9rem;
     }
 
     table th, table td {
-      padding: 12px;
+      padding: 8px 10px;
       text-align: left;
       border: 1px solid #ccc;
     }
 
     table th {
-      background-color: #d8c1a7;
+      background-color: #e8d8c3;
+    }
+
+    .big-btn, .delete-btn {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+      background-color: #a6794e;
+      margin: 2px 0;
+    }
+
+    .delete-btn {
+      background-color: #c4452c;
+    }
+
+    .big-btn:hover, .delete-btn:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="container">
+      <a class="top-link" href="{{ url_for('admin_dashboard') }}">&larr; Torna alla Dashboard</a>
+
       <h2>Utenti Registrati</h2>
 
       {% if users %}
@@ -89,11 +125,10 @@
         <p>Nessun utente registrato.</p>
       {% endif %}
 
-      <br>
-      <a href="{{ url_for('admin_dashboard') }}">&larr; Torna alla Dashboard</a>
     </div>
   </div>
 </body>
 </html>
+
 
 
