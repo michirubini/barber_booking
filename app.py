@@ -190,22 +190,25 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-def invia_email_registrazione(destinatario, nome, cognome, username, telefono):
-    mittente = 'rubinimc@gmail.com'
-    password = 'mtgk jhxz wagn wicg'
+def invia_email_registrazione(destinatario, nome, cognome, username, telefono, password):
+    mittente = 'rubinimc@gmail.com'  # o email del barbiere
+    password_email = 'mtgk jhxz wagn wicg'  # <-- App password Gmail
 
-    oggetto = "Benvenuto nel nostro sistema!"
+    oggetto = "Benvenuto nella nostra Barberia!"
     messaggio = f"""
     Ciao {nome} {cognome},
 
-    Grazie per esserti registrato!
-    Ecco i tuoi dati:
+    Grazie per esserti registrato nel nostro sistema!
+    Ecco i tuoi dati di accesso:
 
     • Username: {username}
+    • Password: {password}
     • Telefono: {telefono}
     • Email: {destinatario}
 
-    A presto!
+    Ti aspettiamo per il tuo prossimo appuntamento 💈
+
+    Barberia XYZ
     """
 
     msg = MIMEMultipart()
@@ -217,12 +220,13 @@ def invia_email_registrazione(destinatario, nome, cognome, username, telefono):
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
-        server.login(mittente, password)
+        server.login(mittente, password_email)
         server.send_message(msg)
         server.quit()
         print("📨 Email inviata con successo!")
     except Exception as e:
         print("❌ Errore nell'invio dell'email:", e)
+
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -260,7 +264,8 @@ def register():
         conn.close()
 
         # ✅ Invio email di conferma registrazione
-        invia_email_registrazione(email, name, surname, username, phone)
+        invia_email_registrazione(email, name, surname, username, phone, password)
+
 
         return redirect(url_for('login_user'))
 
