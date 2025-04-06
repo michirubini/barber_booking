@@ -18,6 +18,7 @@
             <th>Servizio</th>
             <th>Data</th>
             <th>Ora</th>
+            <th>Barbiere</th>
             <th>Azioni</th>
           </tr>
         </thead>
@@ -27,6 +28,7 @@
             <td>{{ appointment[1] }}</td>
             <td>{{ appointment[2] }}</td>
             <td>{{ appointment[3] }}</td>
+            <td>{{ appointment[4] }}</td>
             <td>
               <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
                 <button class="big-btn">Modifica</button>

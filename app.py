@@ -113,7 +113,8 @@ def user_dashboard():
     user_id = session['user_id']
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, service, date, time FROM appointments WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT id, service, date, time, COALESCE(barber, 'ND') FROM appointments WHERE user_id = ?", (user_id,))
+
     appointments = cursor.fetchall()
     conn.close()
     return render_template('user_dashboard.html', appointments=appointments)
@@ -129,7 +130,7 @@ def admin_dashboard():
     conn.commit()
     cursor.execute("""
         SELECT appointments.id, users.username, users.name, users.surname, users.phone,
-               appointments.service, appointments.date, appointments.time 
+               appointments.service, appointments.date, appointments.time, appointments.barber
         FROM appointments 
         JOIN users ON appointments.user_id = users.id
         WHERE appointments.date >= ?
