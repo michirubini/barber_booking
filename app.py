@@ -346,23 +346,15 @@ def book():
             time_obj = datetime.strptime(time, "%H:%M").time()
             now = datetime.now()
 
-            # 📅 Blocco date passate
             if date_obj.date() < now.date():
                 return render_template('book.html', error="Non puoi prenotare in una data passata.")
-
-            # ⏰ Se oggi, controlla che manchi almeno 1 ora
             if date_obj.date() == now.date():
                 appointment_datetime = datetime.combine(date_obj.date(), time_obj)
                 if appointment_datetime < now + timedelta(hours=1):
                     return render_template('book.html', error="Devi prenotare almeno un'ora prima.")
-
-            # 📆 Solo martedì-sabato
-            weekday = date_obj.weekday()
-            if weekday < 1 or weekday > 5:
+            if date_obj.weekday() < 1 or date_obj.weekday() > 5:
                 return render_template('book.html', error="Prenotabile solo da martedì a sabato.")
-
-            # 🕒 Sabato solo fino alle 15:00
-            if weekday == 5 and time > '15:00':
+            if date_obj.weekday() == 5 and time > '15:00':
                 return render_template('book.html', error="Sabato solo fino alle 15:00.")
         except:
             return render_template('book.html', error="Data o orario non validi.")
@@ -370,7 +362,6 @@ def book():
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
 
-        # 🔍 Controlla barbieri già prenotati per quell'orario
         cursor.execute("""
             SELECT barber FROM appointments
             WHERE date = ? AND time = ?
@@ -378,18 +369,14 @@ def book():
         booked_barbers = [row[0] for row in cursor.fetchall()]
 
         assigned_barber = None
-
-        # 👤 Se il cliente ha scelto una preferenza
         if preferred_barber:
             if preferred_barber not in booked_barbers:
                 assigned_barber = preferred_barber
             else:
-                # Assegna l'altro se libero
                 other = 'Achille' if preferred_barber == 'Mattia' else 'Mattia'
                 if other not in booked_barbers:
                     assigned_barber = other
         else:
-            # 🔄 Nessuna preferenza, assegna un barbiere disponibile
             for b in ['Mattia', 'Achille']:
                 if b not in booked_barbers:
                     assigned_barber = b
@@ -399,17 +386,70 @@ def book():
             conn.close()
             return render_template('book.html', error="Orario già pieno.")
 
-        # ✅ Salva appuntamento
         cursor.execute("""
             INSERT INTO appointments (user_id, service, date, time, barber)
             VALUES (?, ?, ?, ?, ?)
         """, (user_id, service, date, time, assigned_barber))
 
         conn.commit()
+
+        # 📧 Invia email di conferma
+        try:
+            cursor.execute("SELECT name, email FROM users WHERE id = ?", (user_id,))
+            user_info = cursor.fetchone()
+            if user_info and user_info[1]:
+                invia_email_appuntamento(
+                    destinatario=user_info[1],
+                    nome=user_info[0],
+                    servizio=service,
+                    data=date,
+                    ora=time
+                )
+        except Exception as e:
+            print("❌ Errore nell'invio email appuntamento:", e)
+
         conn.close()
         return redirect(url_for('user_dashboard'))
 
     return render_template('book.html')
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+def invia_email_appuntamento(destinatario, nome, servizio, data, ora):
+    mittente = 'rubinimc@gmail.com'  # Cambia con la mail del barbiere
+    password = 'mtgk jhxz wagn wicg'  # Password generata da Gmail
+
+    msg = MIMEMultipart()
+    msg['From'] = mittente
+    msg['To'] = destinatario
+    msg['Subject'] = "Conferma appuntamento – Les Klips Hair & Barber"
+
+    corpo = f"""
+Ciao {nome},
+
+la tua prenotazione è stata confermata ✅
+
+✂️ Servizio: {servizio}
+📅 Data: {data}
+⏰ Ora: {ora}
+
+Ti aspettiamo da Les Klips Hair & Barber! 💈
+
+— Lo staff
+"""
+
+    msg.attach(MIMEText(corpo, 'plain'))
+
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.login(mittente, password)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        print("❌ Errore nell'invio dell'email:", e)
+
 
 @app.route('/edit_appointment/<int:appointment_id>', methods=['GET', 'POST'])
 def edit_appointment(appointment_id):
