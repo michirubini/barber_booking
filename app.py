@@ -386,6 +386,13 @@ def admin_dashboard():
     conn.close()
     return render_template('admin_dashboard.html', appointments=appointments)
 
+from flask import request, session, redirect, url_for, render_template
+from datetime import datetime, timedelta
+import sqlite3
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 @app.route('/book', methods=['GET', 'POST'])
 def book():
     if 'user_id' not in session:
@@ -441,17 +448,20 @@ def book():
 
         conn.commit()
 
-        # 📧 Invia email di conferma
+        # 📧 Invia email
         try:
-            cursor.execute("SELECT name, email FROM users WHERE id = ?", (user_id,))
+            cursor.execute("SELECT name, email, phone FROM users WHERE id = ?", (user_id,))
             user_info = cursor.fetchone()
             if user_info and user_info[1]:
                 invia_email_appuntamento(
                     destinatario=user_info[1],
                     nome=user_info[0],
+                    telefono=user_info[2],
+                    email=user_info[1],
                     servizio=service,
                     data=date,
-                    ora=time
+                    ora=time,
+                    barbiere=assigned_barber
                 )
         except Exception as e:
             print("❌ Errore nell'invio email appuntamento:", e)
@@ -462,14 +472,11 @@ def book():
     return render_template('book.html')
 
 
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+def invia_email_appuntamento(destinatario, nome, telefono, email, servizio, data, ora, barbiere=None):
+    mittente = 'rubinimc@gmail.com'
+    password = 'mtgk jhxz wagn wicg'  # Cambia con una password sicura
 
-def invia_email_appuntamento(destinatario, nome, servizio, data, ora):
-    mittente = 'rubinimc@gmail.com'  # Cambia con la mail del barbiere
-    password = 'mtgk jhxz wagn wicg'  # Password generata da Gmail
-
+    # ---- Email al cliente ----
     msg = MIMEMultipart()
     msg['From'] = mittente
     msg['To'] = destinatario
@@ -490,8 +497,6 @@ Per modifiche o cancellazioni puoi farlo direttamente dal sito, oppure contattac
 
 — Lo staff di Les Klips
 """
-
-
     msg.attach(MIMEText(corpo, 'plain'))
 
     try:
@@ -500,7 +505,37 @@ Per modifiche o cancellazioni puoi farlo direttamente dal sito, oppure contattac
         server.send_message(msg)
         server.quit()
     except Exception as e:
-        print("❌ Errore nell'invio dell'email:", e)
+        print("❌ Errore invio email cliente:", e)
+
+    # ---- Copia al salone ----
+    msg_salone = MIMEMultipart()
+    msg_salone['From'] = mittente
+    msg_salone['To'] = 'rubinimc@gmail.com'
+    msg_salone['Subject'] = "📅 Nuova prenotazione ricevuta"
+
+    corpo_salone = f"""
+📬 Nuova prenotazione ricevuta!
+
+👤 Cliente: {nome}
+📞 Cellulare: {telefono}
+📧 Email: {email}
+
+✂️ Servizio: {servizio}
+📅 Data: {data}
+⏰ Ora: {ora}
+💈 Barbiere: {barbiere or 'Non specificato'}
+
+Controlla il gestionale per i dettagli.
+"""
+    msg_salone.attach(MIMEText(corpo_salone, 'plain'))
+
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.login(mittente, password)
+        server.send_message(msg_salone)
+        server.quit()
+    except Exception as e:
+        print("❌ Errore invio email salone:", e)
 
 
 @app.route('/edit_appointment/<int:appointment_id>', methods=['GET', 'POST'])
@@ -517,7 +552,7 @@ def edit_appointment(appointment_id):
     else:
         cursor.execute("SELECT id, service, date, time, barber FROM appointments WHERE id = ? AND user_id = ?",
                        (appointment_id, session['user_id']))
-    
+
     appointment = cursor.fetchone()
     if not appointment:
         conn.close()
@@ -556,7 +591,7 @@ def edit_appointment(appointment_id):
         conn.commit()
         conn.close()
 
-        # 🔁 PATCH REDIRECT: priorità all'admin
+        # 🔁 Redirect: priorità all'admin
         if 'admin' in session:
             return redirect(url_for('admin_dashboard'))
         elif 'user_id' in session:
@@ -566,6 +601,7 @@ def edit_appointment(appointment_id):
 
     conn.close()
     return render_template('edit_appointment.html', appointment=appointment)
+
 
 
 @app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
