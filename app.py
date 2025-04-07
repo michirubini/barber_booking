@@ -238,11 +238,14 @@ Ecco i tuoi dati di accesso personali:
 
 Potrai ora prenotare facilmente i tuoi appuntamenti direttamente online.
 
-Per qualsiasi informazione o richiesta, siamo a tua disposizione.
+Per modifiche o cancellazioni puoi gestire tutto dal sito, oppure chiamare il numero: 051 683 0322 📞
+
+Per qualsiasi altra informazione, siamo a tua disposizione.
 
 A presto,  
 Il team Les Klips Hair & Barber
 """
+
 
     msg = MIMEMultipart()
     msg['From'] = mittente
@@ -440,8 +443,11 @@ la tua prenotazione è stata confermata ✅
 
 Ti aspettiamo da Les Klips Hair & Barber! 💈
 
-— Lo staff
+Per modifiche o cancellazioni puoi farlo direttamente dal sito, oppure contattaci al numero: 051 683 0322 📞
+
+— Lo staff di Les Klips
 """
+
 
     msg.attach(MIMEText(corpo, 'plain'))
 
