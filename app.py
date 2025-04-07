@@ -321,6 +321,49 @@ def user_dashboard():
     conn.close()
     return render_template('user_dashboard.html', appointments=appointments)
 
+@app.route('/admin_add_user', methods=['GET', 'POST'])
+def admin_add_user():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+
+    if request.method == 'POST':
+        name = request.form['name']
+        surname = request.form['surname']
+        phone = request.form['phone']
+        email = request.form['email']
+        username = request.form['username']
+        password = request.form['password']
+
+        conn = sqlite3.connect('bookings.db')
+        cursor = conn.cursor()
+
+        # Verifica duplicati
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        if cursor.fetchone():
+            conn.close()
+            return render_template('admin_edit_user.html', user=(name, surname, phone, email, username, password),
+                                   error="Username già esistente")
+
+        cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+        if cursor.fetchone():
+            conn.close()
+            return render_template('admin_edit_user.html', user=(name, surname, phone, email, username, password),
+                                   error="Email già registrata")
+
+        # Inserimento
+        cursor.execute("""
+            INSERT INTO users (username, password, name, surname, phone, email)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (username, password, name, surname, phone, email))
+
+        conn.commit()
+        conn.close()
+        return redirect(url_for('admin_users'))
+
+    # GET – form vuoto
+    user = ("", "", "", "", "", "")
+    return render_template('admin_edit_user.html', user=user)
+
 
 @app.route('/admin_dashboard')
 def admin_dashboard():
