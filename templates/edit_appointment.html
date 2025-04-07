@@ -28,10 +28,11 @@
       {% if 'admin' in session %}
       <label for="barber">Barbiere:</label>
       <select name="barber" required>
-        <option value="Mattia" {% if appointment[4] == 'Mattia' %} selected {% endif %}>Mattia</option>
-        <option value="Achille" {% if appointment[4] == 'Achille' %} selected {% endif %}>Achille</option>
+      <option value="Mattia" {% if appointment[4] == 'Mattia' %} selected {% endif %}>Mattia</option>
+      <option value="Achille" {% if appointment[4] == 'Achille' %} selected {% endif %}>Achille</option>
       </select>
       {% endif %}
+
 
       <h3>Seleziona una Data</h3>
       <div class="calendar-controls">

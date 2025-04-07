@@ -338,7 +338,6 @@ def book():
         service = request.form['service']
         date = request.form['date']
         time = request.form['time']
-        preferred_barber = request.form.get('barber', '')
         user_id = session['user_id']
 
         try:
@@ -369,18 +368,10 @@ def book():
         booked_barbers = [row[0] for row in cursor.fetchall()]
 
         assigned_barber = None
-        if preferred_barber:
-            if preferred_barber not in booked_barbers:
-                assigned_barber = preferred_barber
-            else:
-                other = 'Achille' if preferred_barber == 'Mattia' else 'Mattia'
-                if other not in booked_barbers:
-                    assigned_barber = other
-        else:
-            for b in ['Mattia', 'Achille']:
-                if b not in booked_barbers:
-                    assigned_barber = b
-                    break
+        for b in ['Achille', 'Mattia']:
+            if b not in booked_barbers:
+                assigned_barber = b
+                break
 
         if not assigned_barber:
             conn.close()
@@ -412,6 +403,7 @@ def book():
         return redirect(url_for('user_dashboard'))
 
     return render_template('book.html')
+
 
 import smtplib
 from email.mime.text import MIMEText
