@@ -55,6 +55,10 @@ def admin_delete_appointment(appointment_id):
 @app.route('/login_admin', methods=['GET', 'POST'])
 def login_admin():
     if request.method == 'POST':
+        # ✅ Se sei loggato come utente, esci dalla sessione utente
+        session.pop('user_id', None)
+        session.pop('username', None)
+
         username = request.form['username']
         password = request.form['password']
         if username == 'admin' and password == 'admin':
@@ -64,9 +68,13 @@ def login_admin():
             return render_template('login_admin.html', error="Credenziali admin non valide")
     return render_template('login_admin.html')
 
+
 @app.route('/login_user', methods=['GET', 'POST'])
 def login_user():
     if request.method == 'POST':
+        # ✅ Se sei loggato come admin, esci dalla sessione admin
+        session.pop('admin', None)
+
         username = request.form['username']
         password = request.form['password']
         conn = sqlite3.connect('bookings.db')
@@ -81,6 +89,7 @@ def login_user():
         else:
             return render_template('login_user.html', error="Credenziali non valide")
     return render_template('login_user.html')
+
 
 @app.route('/admin_users')
 def admin_users():
@@ -451,7 +460,7 @@ def edit_appointment(appointment_id):
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
-    # Carica appuntamento
+    # 🔍 Carica appuntamento
     if 'admin' in session:
         cursor.execute("SELECT id, service, date, time, barber FROM appointments WHERE id = ?", (appointment_id,))
     else:
@@ -463,7 +472,7 @@ def edit_appointment(appointment_id):
         conn.close()
         return redirect(url_for('admin_dashboard' if 'admin' in session else 'user_dashboard'))
 
-    # Blocco modifica troppo vicina per l'utente
+    # ⛔️ Blocco modifica troppo vicina per l'utente
     if 'user_id' in session:
         appointment_datetime = datetime.strptime(f"{appointment[2]} {appointment[3]}", "%Y-%m-%d %H:%M")
         if datetime.now() > appointment_datetime - timedelta(hours=1):
@@ -476,7 +485,7 @@ def edit_appointment(appointment_id):
         new_date = request.form['date']
         new_time = request.form['time']
 
-        # Controllo se lo slot è pieno
+        # ⛔️ Controllo se lo slot è pieno
         cursor.execute("SELECT COUNT(*) FROM appointments WHERE date = ? AND time = ? AND id != ?",
                        (new_date, new_time, appointment_id))
         if cursor.fetchone()[0] >= 2:
@@ -484,7 +493,7 @@ def edit_appointment(appointment_id):
             return render_template("edit_appointment.html", appointment=appointment,
                                    error="Fascia oraria piena.")
 
-        # Se admin, aggiorna anche il barbiere
+        # 🛠️ Se admin, aggiorna anche il barbiere
         if 'admin' in session:
             new_barber = request.form['barber']
             cursor.execute("UPDATE appointments SET service = ?, date = ?, time = ?, barber = ? WHERE id = ?",
@@ -496,12 +505,16 @@ def edit_appointment(appointment_id):
         conn.commit()
         conn.close()
 
-        # Redirect corretto
-        return redirect(url_for('user_dashboard') if 'user_id' in session else 'admin_dashboard')
+        # 🔁 PATCH REDIRECT: priorità all'admin
+        if 'admin' in session:
+            return redirect(url_for('admin_dashboard'))
+        elif 'user_id' in session:
+            return redirect(url_for('user_dashboard'))
+        else:
+            return redirect(url_for('index'))
 
     conn.close()
     return render_template('edit_appointment.html', appointment=appointment)
-
 
 
 @app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
