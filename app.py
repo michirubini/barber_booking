@@ -311,11 +311,13 @@ def user_dashboard():
     user_id = session['user_id']
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, service, date, time, COALESCE(barber, 'ND') FROM appointments WHERE user_id = ?", (user_id,))
 
+    # RIMOSSO il campo 'barber' dalla query
+    cursor.execute("SELECT id, service, date, time FROM appointments WHERE user_id = ?", (user_id,))
     appointments = cursor.fetchall()
     conn.close()
     return render_template('user_dashboard.html', appointments=appointments)
+
 
 @app.route('/admin_dashboard')
 def admin_dashboard():
