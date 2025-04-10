@@ -227,19 +227,19 @@
       const calendarEl = document.getElementById("admin-calendar");
       const monthLabel = document.getElementById("month-label");
       calendarEl.innerHTML = '';
-
+    
       const dayNames = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
       const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       monthLabel.textContent = new Date(year, month).toLocaleString('it-IT', { month: 'long', year: 'numeric' });
-
+    
       for (let i = 0; i < firstDay; i++) {
         calendarEl.appendChild(document.createElement('div'));
       }
-
+    
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
+    
       for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month, d);
         date.setHours(0, 0, 0, 0);
@@ -249,7 +249,7 @@
         if (date.getTime() === today.getTime()) {
           div.classList.add('today');
         }
-
+    
         div.textContent = `${d}\n${weekday}`;
         div.addEventListener('click', () => {
           document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
@@ -257,15 +257,26 @@
           document.getElementById('selected-date-label').textContent = `Appuntamenti per ${formatDate(date)}`;
           loadDaySlots(formatDate(date));
         });
-
+    
         calendarEl.appendChild(div);
       }
-    }
-
+    
+      // 👇 Aggiunto questo blocco:
+      if (month === today.getMonth() && year === today.getFullYear()) {
+        const allDays = document.querySelectorAll('.calendar-day');
+        allDays.forEach(day => {
+          if (day.classList.contains('today')) {
+            day.click(); // Simula click sul giorno di oggi
+          }
+        });
+      }
+    } // <--- chiusura corretta di renderCalendar
+    
+    // 🛠 Funzione spostata fuori
     function loadDaySlots(dateStr) {
       const container = document.getElementById("admin-slots");
       container.innerHTML = 'Caricamento...';
-
+    
       fetch('/admin_get_day_slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -283,7 +294,7 @@
           timeLabel.classList.add('slot-time');
           timeLabel.textContent = time;
           div.appendChild(timeLabel);
-
+    
           const prenotazioni = slots[time];
           for (let i = 0; i < 2; i++) {
             const entry = document.createElement('div');
@@ -306,6 +317,7 @@
         }
       });
     }
+    
 
     function prevMonth() {
       currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);

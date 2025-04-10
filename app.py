@@ -320,14 +320,15 @@ def user_dashboard():
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
-    # Solo appuntamenti futuri o da oggi in poi
     today = datetime.now().strftime("%Y-%m-%d")
+    now_time = datetime.now().strftime("%H:%M")
+
     cursor.execute("""
         SELECT id, service, date, time
         FROM appointments
         WHERE user_id = ? AND (date > ? OR (date = ? AND time >= ?))
         ORDER BY date ASC, time ASC
-    """, (user_id, today, today, datetime.now().strftime("%H:%M")))
+    """, (user_id, today, today, now_time))
 
     appointments = cursor.fetchall()
     conn.close()
