@@ -273,6 +273,11 @@ def register():
         email = request.form['email']
         username = request.form['username']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        # Controllo se le password coincidono
+        if password != confirm_password:
+            return render_template('register.html', error="Le password non coincidono.")
 
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
@@ -301,10 +306,10 @@ def register():
         # ✅ Invio email di conferma registrazione
         invia_email_registrazione(email, name, surname, username, phone, password)
 
-
         return redirect(url_for('login_user'))
 
     return render_template('register.html')
+
 
 @app.route('/user_dashboard')
 def user_dashboard():
