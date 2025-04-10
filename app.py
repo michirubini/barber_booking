@@ -320,11 +320,44 @@ def user_dashboard():
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
-    # RIMOSSO il campo 'barber' dalla query
-    cursor.execute("SELECT id, service, date, time FROM appointments WHERE user_id = ?", (user_id,))
+    # Solo appuntamenti futuri o da oggi in poi
+    today = datetime.now().strftime("%Y-%m-%d")
+    cursor.execute("""
+        SELECT id, service, date, time
+        FROM appointments
+        WHERE user_id = ? AND (date > ? OR (date = ? AND time >= ?))
+        ORDER BY date ASC, time ASC
+    """, (user_id, today, today, datetime.now().strftime("%H:%M")))
+
     appointments = cursor.fetchall()
     conn.close()
+
     return render_template('user_dashboard.html', appointments=appointments)
+
+@app.route('/user_history')
+def user_history():
+    if 'user_id' not in session:
+        return redirect(url_for('login_user'))
+
+    user_id = session['user_id']
+    today = datetime.now().strftime("%Y-%m-%d")
+    now_time = datetime.now().strftime("%H:%M")
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT service, date, time
+        FROM appointments
+        WHERE user_id = ? AND (date < ? OR (date = ? AND time < ?))
+        ORDER BY date DESC, time DESC
+    """, (user_id, today, today, now_time))
+
+    appointments = cursor.fetchall()
+    conn.close()
+
+    return render_template('user_history.html', appointments=appointments)
+
 
 @app.route('/admin_add_user', methods=['GET', 'POST'])
 def admin_add_user():

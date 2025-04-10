@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Storico Appuntamenti</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>📜 Storico Appuntamenti</h2>
+
+    {% if appointments %}
+      <table>
+        <thead>
+          <tr>
+            <th>Servizio</th>
+            <th>Data</th>
+            <th>Ora</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in appointments %}
+          <tr>
+            <td>{{ a[0] }}</td>
+            <td>{{ a[1] }}</td>
+            <td>{{ a[2] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Non hai appuntamenti passati.</p>
+    {% endif %}
+
+    <a href="{{ url_for('user_dashboard') }}">← Torna alla Dashboard</a>
+  </div>
+</body>
+</html>
