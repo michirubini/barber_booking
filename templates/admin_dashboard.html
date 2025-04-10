@@ -124,15 +124,13 @@
     <h2>Admin Dashboard</h2>
 
     <div class="view-toggle">
-      <button onclick="showListView()">📄 Lista Appuntamenti</button>
       <button onclick="showCalendarView()">📅 Vista Calendario</button>
-      <a href="{{ url_for('admin_history') }}">
-        <button>📜 Storico Appuntamenti</button>
-      </a>
-      <a href="{{ url_for('admin_hourly_calendar') }}">
-        <button class="big-btn">🕒 Vista Oraria (1 slot/h)</button>
-      </a>
+      <button onclick="location.href='{{ url_for('admin_hourly_calendar') }}'">📅 Vista Parrucchiera</button>
+      <button onclick="showListView()">📄 Lista Appuntamenti</button>
+      <button onclick="location.href='{{ url_for('admin_history') }}'">📜 Storico Appuntamenti</button>
     </div>
+    
+    
 
     <div id="list-view" class="list-view active-view">
       <h3>Appuntamenti Futuri</h3>
