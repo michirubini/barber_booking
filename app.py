@@ -358,6 +358,11 @@ def user_history():
     conn.close()
 
     return render_template('user_history.html', appointments=appointments)
+@app.route('/admin_hourly_calendar')
+def admin_hourly_calendar():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+    return render_template('admin_calendar_hourly.html')
 
 
 @app.route('/admin_add_user', methods=['GET', 'POST'])
