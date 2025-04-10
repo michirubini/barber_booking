@@ -164,7 +164,7 @@
 
       const times = slotsPerDay[dayOfWeek] || [];
 
-      fetch('/admin_get_day_slots', {
+      fetch('/admin_get_day_slots_hair', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -184,24 +184,28 @@
           timeLabel.textContent = time;
           div.appendChild(timeLabel);
 
-          const prenotazione = null; // Disabilita visualizzazione degli appuntamenti attuali
-          const entry = document.createElement('div');
-          entry.classList.add('slot-entry');
+          const slotPrenotazioni = slots[time] || [];
 
-          if (prenotazione) {
-            entry.classList.add('booked');
-            entry.innerHTML = `
-              ${prenotazione.name} (${prenotazione.phone})<br>
-              💈 <strong>${prenotazione.barber}</strong> – ${prenotazione.servizio}<br>
-              <a href="/edit_appointment/${prenotazione.id}">✏️</a>
-              <button class="admin-delete-appointment" data-id="${prenotazione.id}">🗑️</button>
-            `;
-          } else {
-            entry.classList.add('empty');
-            entry.innerHTML = `Slot libero <a href="/admin_book?date=${dateStr}&time=${time}">➕</a>`;
-          }
+if (slotPrenotazioni.length > 0) {
+  slotPrenotazioni.forEach(p => {
+    const entry = document.createElement('div');
+    entry.classList.add('slot-entry', 'booked');
+    entry.innerHTML = `
+      ${p.name} (${p.phone})<br>
+      💈 <strong>${p.barber}</strong> – ${p.servizio}<br>
+      <a href="/edit_appointment/${p.id}">✏️</a>
+      <button class="admin-delete-appointment" data-id="${p.id}">🗑️</button>
+    `;
+    div.appendChild(entry);
+  });
+} else {
+  const entry = document.createElement('div');
+  entry.classList.add('slot-entry', 'empty');
+  entry.innerHTML = `Slot libero <a href="/admin_book?date=${dateStr}&time=${time}">➕</a>`;
+  div.appendChild(entry);
+}
 
-          div.appendChild(entry);
+
           container.appendChild(div);
         });
       });

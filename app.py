@@ -792,6 +792,54 @@ def admin_get_day_slots():
 
     return jsonify({'slots': slots})
 
+@app.route('/admin_get_day_slots_hair', methods=['POST'])
+def admin_get_day_slots_hair():
+    if 'admin' not in session:
+        return jsonify({'error': 'Non autorizzato'}), 403
+
+    data = request.get_json()
+    date = data.get('date')
+    if not date:
+        return jsonify({'error': 'Data mancante'}), 400
+    
+    weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+    if weekday == 0 or weekday == 6:
+        return jsonify({'slots': {}})
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT users.name, users.phone, appointments.service, appointments.time, appointments.id, appointments.barber
+    FROM appointments
+    JOIN users ON users.id = appointments.user_id
+    WHERE appointments.date = ? AND appointments.tipo = 'parrucchiera'
+""", (date,))
+
+    records = cursor.fetchall()
+    conn.close()
+
+    all_times = ['09:00','10:00','11:00','12:00','13:00','14:00',
+                 '15:00','16:00','17:00','18:00','19:00']
+
+    if weekday == 5:
+        times = [t for t in all_times if t <= '15:00']
+    else:
+        times = all_times
+
+    slots = {t: [] for t in times}
+    for name, phone, servizio, time, app_id, barber in records:
+        if time in slots:
+            slots[time].append({
+                'name': name,
+                'phone': phone,
+                'servizio': servizio,
+                'id': app_id,
+                'barber': barber
+            })
+
+    return jsonify({'slots': slots})
+
+
 @app.route('/account', methods=['GET', 'POST'])
 def account():
     if 'user_id' not in session:
