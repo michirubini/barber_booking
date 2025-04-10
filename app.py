@@ -991,6 +991,53 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+@app.route('/book_hair', methods=['GET', 'POST'])
+def book_hair():
+    if 'username' not in session:
+        return redirect(url_for('login_user'))
+
+    if request.method == 'POST':
+        username = session['username']
+        servizio = request.form['servizio']
+        data = request.form['data']
+        orario = request.form['orario']
+        barbiere = request.form['barbiere']
+
+        # Recupera nome, cognome e telefono dell'utente
+        conn = sqlite3.connect('bookings.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, surname, phone FROM users WHERE username = ?", (username,))
+        user_info = cursor.fetchone()
+
+        if not user_info:
+            conn.close()
+            return render_template('book_hair.html', error="Utente non trovato.")
+
+        name, surname, phone = user_info
+
+        # Controllo se c'è già un appuntamento a quell'orario
+        cursor.execute("""
+            SELECT * FROM appointments
+            WHERE data = ? AND orario = ? AND barbiere = ?
+        """, (data, orario, barbiere))
+
+        if cursor.fetchone():
+            conn.close()
+            return render_template('book_hair.html', error="Orario già prenotato per questo parrucchiere.")
+
+        # Salvataggio nel database con tipo = 'parrucchiera'
+        cursor.execute("""
+            INSERT INTO appointments (username, name, surname, phone, servizio, data, orario, barber, tipo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'parrucchiera')
+        """, (username, name, surname, phone, servizio, data, orario, barbiere))
+
+        conn.commit()
+        conn.close()
+
+        return render_template('book_hair.html', success="Prenotazione effettuata con successo!")
+
+    return render_template('book_hair.html')
+
 @app.route('/admin_book', methods=['GET', 'POST'])
 def admin_book():
     if 'admin' not in session:

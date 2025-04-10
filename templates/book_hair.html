@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prenotazione Donna</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Prenota Appuntamento Donna</h2>
+
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    {% if success %}
+      <p style="color: green;">{{ success }}</p>
+    {% endif %}
+
+    <form method="post">
+      <label for="servizio">Servizio:</label>
+      <select id="servizio" name="servizio" required>
+        <option value="Taglio + Piega">Taglio + Piega (1 ora)</option>
+        <option value="Taglio + Colore + Piega">Taglio + Colore + Piega (1 ora)</option>
+      </select>
+
+      <label for="data">Data:</label>
+      <input type="date" id="data" name="data" required>
+
+      <label for="orario">Orario:</label>
+      <input type="time" id="orario" name="orario" required>
+
+      <label for="barbiere">Parrucchiere/a:</label>
+      <select id="barbiere" name="barbiere">
+        <option value="Angela">Angela</option>
+        <option value="Sara">Sara</option>
+      </select>
+
+      <button type="submit" class="big-btn">Prenota</button>
+    </form>
+
+    <a href="{{ url_for('user_dashboard') }}"><button class="big-btn">← Torna alla Dashboard</button></a>
+  </div>
+</body>
+</html>
