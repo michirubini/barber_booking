@@ -1049,12 +1049,12 @@ def book_hair():
         service = request.form['service']
         date = request.form['date']
         time = request.form['time']
-        barber = request.form['barber']  # Sempre "Daniela" in questo caso
+        barber = request.form['barber']  # Es. "Daniela"
 
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
 
-        # Verifica se lo slot è già occupato dalla parrucchiera
+        # Controlla se lo slot è già prenotato dalla parrucchiera
         cursor.execute("""
             SELECT COUNT(*) FROM appointments
             WHERE date = ? AND time = ? AND barber = ? AND tipo = 'parrucchiera'
@@ -1063,15 +1063,32 @@ def book_hair():
             conn.close()
             return render_template('book_hair.html', error="Orario già prenotato.")
 
-        # Inserisci l'appuntamento come per l'uomo, ma con tipo = 'parrucchiera'
+        # Salva l'appuntamento
         cursor.execute("""
             INSERT INTO appointments (user_id, service, date, time, barber, tipo)
             VALUES (?, ?, ?, ?, ?, 'parrucchiera')
         """, (user_id, service, date, time, barber))
-
         conn.commit()
-        conn.close()
 
+        # 📧 Invio email di conferma
+        try:
+            cursor.execute("SELECT name, email, phone FROM users WHERE id = ?", (user_id,))
+            user_info = cursor.fetchone()
+            if user_info and user_info[1]:
+                invia_email_appuntamento(
+                    destinatario=user_info[1],
+                    nome=user_info[0],
+                    telefono=user_info[2],
+                    email=user_info[1],
+                    servizio=service,
+                    data=date,
+                    ora=time,
+                    barbiere=barber
+                )
+        except Exception as e:
+            print("❌ Errore invio email appuntamento donna:", e)
+
+        conn.close()
         return redirect(url_for('user_dashboard'))
 
     return render_template('book_hair.html')
