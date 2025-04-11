@@ -273,6 +273,11 @@ def register():
         email = request.form['email']
         username = request.form['username']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        # Controllo se le password coincidono
+        if password != confirm_password:
+            return render_template('register.html', error="Le password non coincidono.")
 
         conn = sqlite3.connect('bookings.db')
         cursor = conn.cursor()
@@ -301,10 +306,10 @@ def register():
         # ✅ Invio email di conferma registrazione
         invia_email_registrazione(email, name, surname, username, phone, password)
 
-
         return redirect(url_for('login_user'))
 
     return render_template('register.html')
+
 
 @app.route('/user_dashboard')
 def user_dashboard():
@@ -315,11 +320,50 @@ def user_dashboard():
     conn = sqlite3.connect('bookings.db')
     cursor = conn.cursor()
 
-    # RIMOSSO il campo 'barber' dalla query
-    cursor.execute("SELECT id, service, date, time FROM appointments WHERE user_id = ?", (user_id,))
+    today = datetime.now().strftime("%Y-%m-%d")
+    now_time = datetime.now().strftime("%H:%M")
+
+    cursor.execute("""
+        SELECT id, service, date, time
+        FROM appointments
+        WHERE user_id = ? AND (date > ? OR (date = ? AND time >= ?))
+        ORDER BY date ASC, time ASC
+    """, (user_id, today, today, now_time))
+
     appointments = cursor.fetchall()
     conn.close()
+
     return render_template('user_dashboard.html', appointments=appointments)
+
+@app.route('/user_history')
+def user_history():
+    if 'user_id' not in session:
+        return redirect(url_for('login_user'))
+
+    user_id = session['user_id']
+    today = datetime.now().strftime("%Y-%m-%d")
+    now_time = datetime.now().strftime("%H:%M")
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT service, date, time
+        FROM appointments
+        WHERE user_id = ? AND (date < ? OR (date = ? AND time < ?))
+        ORDER BY date DESC, time DESC
+    """, (user_id, today, today, now_time))
+
+    appointments = cursor.fetchall()
+    conn.close()
+
+    return render_template('user_history.html', appointments=appointments)
+@app.route('/admin_hourly_calendar')
+def admin_hourly_calendar():
+    if 'admin' not in session:
+        return redirect(url_for('login_admin'))
+    return render_template('admin_calendar_hourly.html')
+
 
 @app.route('/admin_add_user', methods=['GET', 'POST'])
 def admin_add_user():
@@ -748,6 +792,54 @@ def admin_get_day_slots():
 
     return jsonify({'slots': slots})
 
+@app.route('/admin_get_day_slots_hair', methods=['POST'])
+def admin_get_day_slots_hair():
+    if 'admin' not in session:
+        return jsonify({'error': 'Non autorizzato'}), 403
+
+    data = request.get_json()
+    date = data.get('date')
+    if not date:
+        return jsonify({'error': 'Data mancante'}), 400
+    
+    weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+    if weekday == 0 or weekday == 6:
+        return jsonify({'slots': {}})
+
+    conn = sqlite3.connect('bookings.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT users.name, users.phone, appointments.service, appointments.time, appointments.id, appointments.barber
+    FROM appointments
+    JOIN users ON users.id = appointments.user_id
+    WHERE appointments.date = ? AND appointments.tipo = 'parrucchiera'
+""", (date,))
+
+    records = cursor.fetchall()
+    conn.close()
+
+    all_times = ['09:00','10:00','11:00','12:00','13:00','14:00',
+                 '15:00','16:00','17:00','18:00','19:00']
+
+    if weekday == 5:
+        times = [t for t in all_times if t <= '15:00']
+    else:
+        times = all_times
+
+    slots = {t: [] for t in times}
+    for name, phone, servizio, time, app_id, barber in records:
+        if time in slots:
+            slots[time].append({
+                'name': name,
+                'phone': phone,
+                'servizio': servizio,
+                'id': app_id,
+                'barber': barber
+            })
+
+    return jsonify({'slots': slots})
+
+
 @app.route('/account', methods=['GET', 'POST'])
 def account():
     if 'user_id' not in session:
@@ -946,6 +1038,62 @@ def export_history_csv():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+@app.route('/book_hair', methods=['GET', 'POST'])
+def book_hair():
+    if 'user_id' not in session:
+        return redirect(url_for('login_user'))
+
+    if request.method == 'POST':
+        user_id = session['user_id']
+        service = request.form['service']
+        date = request.form['date']
+        time = request.form['time']
+        barber = request.form['barber']  # Es. "Daniela"
+
+        conn = sqlite3.connect('bookings.db')
+        cursor = conn.cursor()
+
+        # Controlla se lo slot è già prenotato dalla parrucchiera
+        cursor.execute("""
+            SELECT COUNT(*) FROM appointments
+            WHERE date = ? AND time = ? AND barber = ? AND tipo = 'parrucchiera'
+        """, (date, time, barber))
+        if cursor.fetchone()[0] >= 1:
+            conn.close()
+            return render_template('book_hair.html', error="Orario già prenotato.")
+
+        # Salva l'appuntamento
+        cursor.execute("""
+            INSERT INTO appointments (user_id, service, date, time, barber, tipo)
+            VALUES (?, ?, ?, ?, ?, 'parrucchiera')
+        """, (user_id, service, date, time, barber))
+        conn.commit()
+
+        # 📧 Invio email di conferma
+        try:
+            cursor.execute("SELECT name, email, phone FROM users WHERE id = ?", (user_id,))
+            user_info = cursor.fetchone()
+            if user_info and user_info[1]:
+                invia_email_appuntamento(
+                    destinatario=user_info[1],
+                    nome=user_info[0],
+                    telefono=user_info[2],
+                    email=user_info[1],
+                    servizio=service,
+                    data=date,
+                    ora=time,
+                    barbiere=barber
+                )
+        except Exception as e:
+            print("❌ Errore invio email appuntamento donna:", e)
+
+        conn.close()
+        return redirect(url_for('user_dashboard'))
+
+    return render_template('book_hair.html')
+
+
 
 @app.route('/admin_book', methods=['GET', 'POST'])
 def admin_book():

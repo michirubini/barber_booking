@@ -9,7 +9,7 @@
 <body>
   <div class="container">
     <h2>Ciao, {{ session['username'] }}</h2>
-    <h3>I tuoi appuntamenti</h3>
+    <h3>Appuntamenti Futuri</h3>
 
     {% if appointments %}
       <table>
@@ -23,25 +23,30 @@
         </thead>
         <tbody>
           {% for appointment in appointments %}
-          <td>{{ appointment[1] }}</td> <!-- Servizio -->
-          <td>{{ appointment[2] }}</td> <!-- Data -->
-          <td>{{ appointment[3] }}</td> <!-- Ora -->
-          <td>
-  <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
-    <button class="big-btn">Modifica</button>
-  </a>
-  <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}" style="background-color: #7b2f3c; color: white;">Elimina</button>
-</td>
+          <tr>
+            <td>{{ appointment[1] }}</td> <!-- Servizio -->
+            <td>{{ appointment[2] }}</td> <!-- Data -->
+            <td>{{ appointment[3] }}</td> <!-- Ora -->
+            <td>
+              <a href="{{ url_for('edit_appointment', appointment_id=appointment[0]) }}">
+                <button class="big-btn">Modifica</button>
+              </a>
+              <button class="delete-appointment big-btn" data-id="{{ appointment[0] }}" style="background-color: #7b2f3c; color: white;">Elimina</button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     {% else %}
-      <p>Non hai appuntamenti prenotati.</p>
+      <p>Non hai appuntamenti futuri.</p>
     {% endif %}
 
-    <a href="{{ url_for('book') }}"><button class="big-btn">Prenota un nuovo appuntamento</button></a>
-    <a href="{{ url_for('account') }}"><button class="big-btn">Il mio profilo</button></a>
+    <!-- Bottoni separati per uomo/donna -->
+    <a href="{{ url_for('book') }}"><button class="big-btn">Prenota appuntamento uomo</button></a>
+    <a href="{{ url_for('book_hair') }}"><button class="big-btn">Prenota appuntamento donna</button></a>
+
+    <a href="{{ url_for('user_history') }}"><button class="big-btn"> Storico Appuntamenti</button></a>
+    <a href="{{ url_for('account') }}"><button class="big-btn">👤 Il mio profilo</button></a>
     <a href="{{ url_for('logout') }}"><button class="logout-btn">Logout</button></a>
     <a href="{{ url_for('index') }}">Torna alla Home</a>
   </div>

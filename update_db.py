@@ -36,7 +36,14 @@ try:
 except sqlite3.OperationalError:
     print("[INFO] La colonna 'barber' esiste già nella tabella appointments")
 
+# Aggiunta colonna 'tipo' nella tabella appointments
+try:
+    cursor.execute("ALTER TABLE appointments ADD COLUMN tipo TEXT DEFAULT 'barbiere'")
+    print("[OK] Colonna 'tipo' aggiunta alla tabella appointments")
+except sqlite3.OperationalError:
+    print("[INFO] La colonna 'tipo' esiste già nella tabella appointments")
+
+# Salvataggio e chiusura
 conn.commit()
 conn.close()
 print("\n✅ Database aggiornato con successo!")
-
